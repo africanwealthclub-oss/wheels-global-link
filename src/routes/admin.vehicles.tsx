@@ -72,12 +72,16 @@ function VehicleAdminPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const result = await adminList<Vehicle>("vehicles");
-      setItems(result.data);
+      const result = await adminList<Vehicle>("vehicles", "?per_page=100");
+      setItems(Array.isArray(result.data) ? result.data : []);
       setConnected(true);
     } catch (error) {
       setConnected(false);
-      setMessage(error instanceof Error ? error.message : "Unable to load vehicles");
+      setMessage(
+        error instanceof Error
+          ? `${error.message} Check that you are signed in and the PHP API /admin/vehicles route is deployed.`
+          : "Unable to load vehicles. Check the PHP API deployment.",
+      );
     } finally {
       setLoading(false);
     }
