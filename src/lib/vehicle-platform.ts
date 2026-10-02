@@ -203,6 +203,64 @@ export async function publicVehicleBySlug(slug: string): Promise<Vehicle | null>
   return vehicle.slug && vehicle.brand && vehicle.model ? vehicle : null;
 }
 
+export type PublicNewsArticle = {
+  id?: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  cover_image?: string | null;
+  published_at?: string | null;
+};
+
+export async function publicNews(slug?: string): Promise<PublicNewsArticle | PublicNewsArticle[]> {
+  if (!API_BASE_URL) throw new Error("Live API is not configured.");
+  const path = slug ? `/news/${encodeURIComponent(slug)}` : "/news";
+  const response = await fetch(apiUrl(path), {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(6000),
+  });
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<
+    PublicNewsArticle | PublicNewsArticle[]
+  >;
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(
+      typeof payload?.error === "string"
+        ? payload.error
+        : `News request failed: ${response.status}`,
+    );
+  }
+  return payload.data;
+}
+
+export type PublicOrderTracking = {
+  status?: string;
+  order_number?: string;
+  events?: Array<{ status: string; note?: string; location?: string; event_at?: string }>;
+};
+
+export async function publicTrackOrder(
+  orderNumber: string,
+  confirmation: string,
+): Promise<PublicOrderTracking> {
+  if (!API_BASE_URL) throw new Error("Live API is not configured.");
+  const response = await fetch(
+    apiUrl(
+      `/orders/track/${encodeURIComponent(orderNumber)}?confirmation=${encodeURIComponent(confirmation)}`,
+    ),
+    { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6000) },
+  );
+  const payload = (await response.json().catch(() => ({}))) as {
+    ok?: boolean;
+    order?: PublicOrderTracking;
+    error?: string;
+  };
+  if (!response.ok || payload.ok === false || !payload.order) {
+    throw new Error(typeof payload.error === "string" ? payload.error : "Order not found");
+  }
+  return payload.order;
+}
+
 export async function adminList<T>(
   resource: "vehicles" | "parts" | "inquiries" | "orders" | "articles",
   query = "",

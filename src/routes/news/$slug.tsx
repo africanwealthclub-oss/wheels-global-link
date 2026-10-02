@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { NewsArticle } from "@/components/news";
 import { PageIntro } from "@/components/marketplace";
 import { localArticles } from "@/lib/news";
+import { publicNews } from "@/lib/vehicle-platform";
 import image from "@/assets/awa-global.jpg";
 
 export const Route = createFileRoute("/news/$slug")({
@@ -16,10 +17,13 @@ function NewsDetailPage() {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch(`/news/${encodeURIComponent(slug)}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then(setArticle)
-      .catch(() => setArticle(localArticles.find((item) => item.slug === slug) || null))
+    publicNews(slug)
+      .then((data) => setArticle(Array.isArray(data) ? null : data))
+      .catch(() =>
+        setArticle(
+          import.meta.env.DEV ? localArticles.find((item) => item.slug === slug) || null : null,
+        ),
+      )
       .finally(() => setLoading(false));
   }, [slug]);
   return (

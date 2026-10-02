@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { NewsCard, NewsGrid, type NewsArticle } from "@/components/news";
 import { PageIntro, SectionHeading } from "@/components/marketplace";
 import { localArticles } from "@/lib/news";
+import { publicNews } from "@/lib/vehicle-platform";
 import image from "@/assets/awa-global.jpg";
 
 export const Route = createFileRoute("/news/")({
@@ -22,13 +23,12 @@ function NewsPage() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch("/news")
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
+    publicNews()
       .then((data) => {
-        const incoming = Array.isArray(data) ? data : data.articles || [];
-        setArticles(incoming.length ? incoming : localArticles);
+        const incoming = Array.isArray(data) ? data : [];
+        setArticles(incoming.length || !import.meta.env.DEV ? incoming : localArticles);
       })
-      .catch(() => setArticles(localArticles))
+      .catch(() => setArticles(import.meta.env.DEV ? localArticles : []))
       .finally(() => setLoading(false));
   }, []);
   return (
