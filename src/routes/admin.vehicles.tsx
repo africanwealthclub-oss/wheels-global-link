@@ -258,9 +258,20 @@ function VehicleAdminPage() {
               Select multiple JPG, PNG, or WebP images. Maximum 12 MB per image.
             </span>
             {imageFiles.length > 0 && (
-              <span className="mt-2 block text-xs font-semibold text-primary">
-                {imageFiles.length} image{imageFiles.length === 1 ? "" : "s"} ready to upload
-              </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {imageFiles.map((file) => (
+                  <div key={`${file.name}-${file.lastModified}`} className="w-24">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="h-16 w-24 rounded-lg object-cover"
+                    />
+                    <span className="mt-1 block truncate text-[10px] text-slate-500">
+                      {file.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
           </label>
           <label className="mt-4 block">
@@ -324,12 +335,22 @@ function VehicleAdminPage() {
             key={vehicle.id ?? vehicle.slug}
             className="grid gap-3 border-b border-slate-100 p-5 last:border-0 md:grid-cols-[1.4fr_.7fr_.8fr_.8fr_auto] md:items-center md:gap-4 md:px-5"
           >
-            <div>
-              <p className="text-xs font-bold uppercase text-primary">
-                {vehicle.brand} · {vehicle.year}
-              </p>
-              <p className="text-lg font-extrabold">{vehicle.model}</p>
-              <p className="text-xs text-slate-500">{vehicle.slug || "No slug"}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              <img
+                src={vehicle.image || getVehicleFallbackImage(vehicle.category)}
+                alt={`${vehicle.brand} ${vehicle.model}`}
+                className="h-16 w-24 shrink-0 rounded-xl border border-slate-100 object-cover"
+                onError={(event) => {
+                  event.currentTarget.src = getVehicleFallbackImage(vehicle.category);
+                }}
+              />
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase text-primary">
+                  {vehicle.brand} · {vehicle.year}
+                </p>
+                <p className="text-lg font-extrabold">{vehicle.model}</p>
+                <p className="text-xs text-slate-500">{vehicle.slug || "No slug"}</p>
+              </div>
             </div>
             <div>
               <Badge variant={vehicle.is_published ? "default" : "secondary"}>
