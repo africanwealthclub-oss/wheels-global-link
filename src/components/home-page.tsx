@@ -20,8 +20,10 @@ import carsCategory from "@/assets/awa-cars-category.jpg";
 import showroom from "@/assets/awa-showroom.jpg";
 import globalImage from "@/assets/awa-global.jpg";
 import { vehicles } from "@/lib/inventory";
+import { localArticles } from "@/lib/news";
 import { ContactStrip, whatsappUrl } from "./site-shell";
 import { SectionHeading, VehicleGrid } from "./marketplace";
+import { NewsGrid } from "./news";
 
 const reveal = {
   initial: { opacity: 0, y: 24 },
@@ -55,6 +57,7 @@ export function HomePage() {
         </div>
       </motion.section>
       <MarketplacePreview />
+      <NewsSection />
       <GlobalSection />
       <WhySection />
       <ProcessSection />
@@ -359,6 +362,30 @@ function MarketplacePreview() {
               <ArrowRight className="mt-6 h-5 w-5" />
             </Link>
           ))}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function NewsSection() {
+  return (
+    <motion.section {...reveal} className="section-pad bg-secondary">
+      <div className="container-shell">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <SectionHeading
+            eyebrow="AWA updates"
+            title="News From The Road"
+            copy="Sourcing guidance, inspection notes, and practical export updates from our Guangzhou team."
+          />
+          <Button asChild variant="outline" className="shrink-0">
+            <Link to="/news">
+              View All News <ArrowRight />
+            </Link>
+          </Button>
+        </div>
+        <div className="mt-10">
+          <NewsGrid articles={localArticles.slice(0, 3)} />
         </div>
       </div>
     </motion.section>
