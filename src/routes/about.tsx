@@ -73,8 +73,60 @@ function AboutPage() {
           </div>
         </div>
       </section>
-      <section className="section-pad bg-background"><div className="container-shell"><SectionHeading eyebrow="Our standard" title="Clarity At Every Handoff"/><div className="grid gap-6 md:grid-cols-3"><div className="border-t-2 border-primary pt-5"><h2 className="text-2xl font-bold uppercase">Listen first</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Every search starts with the customer brief, not a generic list of stock.</p></div><div className="border-t-2 border-primary pt-5"><h2 className="text-2xl font-bold uppercase">Show the detail</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">We make the important vehicle information easy to review before a commitment.</p></div><div className="border-t-2 border-primary pt-5"><h2 className="text-2xl font-bold uppercase">Stay available</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Clear updates keep the sourcing conversation moving across time zones.</p></div></div></div></section>
-      <section className="section-pad bg-secondary"><div className="container-shell grid gap-8 lg:grid-cols-2"><div><SectionHeading eyebrow="Our base" title="Guangzhou Gives Us Reach" copy="Our location places the team close to a major automotive and trading center, helping us respond to a wide range of vehicle briefs."/></div><div className="grid grid-cols-2 gap-4"><div className="bg-background p-5"><strong className="text-3xl text-primary">01</strong><p className="mt-3 text-sm font-bold uppercase">Market access</p></div><div className="bg-background p-5"><strong className="text-3xl text-primary">02</strong><p className="mt-3 text-sm font-bold uppercase">Global perspective</p></div><div className="bg-background p-5"><strong className="text-3xl text-primary">03</strong><p className="mt-3 text-sm font-bold uppercase">Practical guidance</p></div><div className="bg-background p-5"><strong className="text-3xl text-primary">04</strong><p className="mt-3 text-sm font-bold uppercase">Dependable contact</p></div></div></div></section>
+      <section className="section-pad bg-background">
+        <div className="container-shell">
+          <SectionHeading eyebrow="Our standard" title="Clarity At Every Handoff" />
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="border-t-2 border-primary pt-5">
+              <h2 className="text-2xl font-bold uppercase">Listen first</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Every search starts with the customer brief, not a generic list of stock.
+              </p>
+            </div>
+            <div className="border-t-2 border-primary pt-5">
+              <h2 className="text-2xl font-bold uppercase">Show the detail</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                We make the important vehicle information easy to review before a commitment.
+              </p>
+            </div>
+            <div className="border-t-2 border-primary pt-5">
+              <h2 className="text-2xl font-bold uppercase">Stay available</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Clear updates keep the sourcing conversation moving across time zones.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="section-pad bg-secondary">
+        <div className="container-shell grid gap-8 lg:grid-cols-2">
+          <div>
+            <SectionHeading
+              eyebrow="Our base"
+              title="Guangzhou Gives Us Reach"
+              copy="Our location places the team close to a major automotive and trading center, helping us respond to a wide range of vehicle briefs."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-background p-5">
+              <strong className="text-3xl text-primary">01</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Market access</p>
+            </div>
+            <div className="bg-background p-5">
+              <strong className="text-3xl text-primary">02</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Global perspective</p>
+            </div>
+            <div className="bg-background p-5">
+              <strong className="text-3xl text-primary">03</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Practical guidance</p>
+            </div>
+            <div className="bg-background p-5">
+              <strong className="text-3xl text-primary">04</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Dependable contact</p>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="section-pad bg-navy text-primary-foreground">
         <div className="container-shell flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>

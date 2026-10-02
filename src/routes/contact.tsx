@@ -33,8 +33,59 @@ function ContactPage() {
         </div>
       </section>
       <InquirySection />
-      <section className="section-pad bg-background"><div className="container-shell"><SectionHeading eyebrow="Before you reach out" title="Bring A Useful Brief" copy="The more context you share, the more precisely we can search."/><div className="grid gap-4 md:grid-cols-4"><div className="border border-border p-5"><strong className="text-primary">01</strong><p className="mt-3 text-sm font-bold uppercase">Make or model</p></div><div className="border border-border p-5"><strong className="text-primary">02</strong><p className="mt-3 text-sm font-bold uppercase">Budget range</p></div><div className="border border-border p-5"><strong className="text-primary">03</strong><p className="mt-3 text-sm font-bold uppercase">Destination</p></div><div className="border border-border p-5"><strong className="text-primary">04</strong><p className="mt-3 text-sm font-bold uppercase">Timing</p></div></div></div></section>
-      <section className="section-pad bg-navy text-primary-foreground"><div className="container-shell grid gap-8 md:grid-cols-2"><div><SectionHeading eyebrow="What happens next" title="A Direct Reply From Our Team" copy="We review your request, confirm what we need to know, and respond with the clearest available options." inverse/></div><div className="grid gap-4 sm:grid-cols-2"><div className="border-l-2 border-primary p-4"><strong>Review</strong><p className="mt-2 text-sm text-primary-foreground/65">Your requirements are read by the sourcing team.</p></div><div className="border-l-2 border-primary p-4"><strong>Respond</strong><p className="mt-2 text-sm text-primary-foreground/65">We come back with practical next steps.</p></div></div></div></section>
+      <section className="section-pad bg-background">
+        <div className="container-shell">
+          <SectionHeading
+            eyebrow="Before you reach out"
+            title="Bring A Useful Brief"
+            copy="The more context you share, the more precisely we can search."
+          />
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="border border-border p-5">
+              <strong className="text-primary">01</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Make or model</p>
+            </div>
+            <div className="border border-border p-5">
+              <strong className="text-primary">02</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Budget range</p>
+            </div>
+            <div className="border border-border p-5">
+              <strong className="text-primary">03</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Destination</p>
+            </div>
+            <div className="border border-border p-5">
+              <strong className="text-primary">04</strong>
+              <p className="mt-3 text-sm font-bold uppercase">Timing</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="section-pad bg-navy text-primary-foreground">
+        <div className="container-shell grid gap-8 md:grid-cols-2">
+          <div>
+            <SectionHeading
+              eyebrow="What happens next"
+              title="A Direct Reply From Our Team"
+              copy="We review your request, confirm what we need to know, and respond with the clearest available options."
+              inverse
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="border-l-2 border-primary p-4">
+              <strong>Review</strong>
+              <p className="mt-2 text-sm text-primary-foreground/65">
+                Your requirements are read by the sourcing team.
+              </p>
+            </div>
+            <div className="border-l-2 border-primary p-4">
+              <strong>Respond</strong>
+              <p className="mt-2 text-sm text-primary-foreground/65">
+                We come back with practical next steps.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="section-pad bg-secondary">
         <div className="container-shell">
           <SectionHeading

@@ -16,8 +16,10 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        automotive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:-translate-y-0.5",
-        inverse: "border border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground hover:text-primary",
+        automotive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:-translate-y-0.5",
+        inverse:
+          "border border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground hover:text-primary",
       },
       size: {
         default: "h-9 px-4 py-2",

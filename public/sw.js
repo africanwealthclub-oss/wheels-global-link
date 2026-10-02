@@ -25,7 +25,8 @@ self.addEventListener("fetch", (event) => {
     url.origin !== self.location.origin ||
     url.pathname.startsWith("/api") ||
     url.pathname.startsWith("/admin")
-  ) return;
+  )
+    return;
   event.respondWith(
     fetch(request)
       .then((response) => {

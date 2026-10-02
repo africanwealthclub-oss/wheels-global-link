@@ -12,7 +12,7 @@ import {
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { getVehicleFallbackImage, type Part, type Vehicle } from "@/lib/inventory";
-import { getFavoriteSlugs, toggleFavorite } from "@/lib/vehicle-platform";
+import { getFavoriteSlugs, toggleFavorite, trackAnalytics } from "@/lib/vehicle-platform";
 
 type CompareContextValue = {
   selected: string[];
@@ -23,13 +23,18 @@ const CompareContext = createContext<CompareContextValue | undefined>(undefined)
 export function CompareProvider({ children }: { children: ReactNode }) {
   const [selected, setSelected] = useState<string[]>([]);
   function toggle(slug: string) {
-    setSelected((current) =>
-      current.includes(slug)
+    setSelected((current) => {
+      const alreadySelected = current.includes(slug);
+      trackAnalytics("compare", "vehicle", undefined, {
+        slug,
+        action: alreadySelected ? "remove" : "add",
+      });
+      return alreadySelected
         ? current.filter((item) => item !== slug)
         : current.length < 3
           ? [...current, slug]
-          : current,
-    );
+          : current;
+    });
   }
   return (
     <CompareContext.Provider value={{ selected, toggle, clear: () => setSelected([]) }}>
@@ -136,6 +141,10 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             onClick={() => {
               const next = toggleFavorite(vehicle.slug);
               setSaved(next.includes(vehicle.slug));
+              trackAnalytics("favorite", "vehicle", undefined, {
+                slug: vehicle.slug,
+                saved: next.includes(vehicle.slug),
+              });
             }}
             className="inline-flex items-center gap-1 text-xs font-bold uppercase text-primary"
             aria-pressed={saved}

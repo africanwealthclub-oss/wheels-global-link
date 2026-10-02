@@ -1,30 +1,190 @@
 import { useState, type FormEvent } from "react";
-import { Bot, CarFront, ChevronRight, CircleHelp, GitCompareArrows, Heart, MessageCircle, Send, Ship, Sparkles, X } from "lucide-react";
+import {
+  Bot,
+  CarFront,
+  ChevronRight,
+  CircleHelp,
+  GitCompareArrows,
+  Heart,
+  MessageCircle,
+  Send,
+  Ship,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackAnalytics } from "@/lib/vehicle-platform";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
-
+type ChatAction = { label: string; href: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; actions?: ChatAction[] };
 type HelpTopic = { label: string; prompt: string; icon: typeof CarFront };
+type AssistantReply = { content: string; actions?: ChatAction[] };
+
 const topics: HelpTopic[] = [
-  { label: "Find a vehicle", prompt: "How do I find the right vehicle?", icon: CarFront },
-  { label: "Prices & currency", prompt: "How do prices and currencies work?", icon: Sparkles },
-  { label: "Sourcing & shipping", prompt: "How does sourcing and shipping work?", icon: Ship },
-  { label: "Saved cars & compare", prompt: "How do favorites and compare work?", icon: GitCompareArrows },
+  { label: "Find a vehicle", prompt: "Help me find the right vehicle", icon: CarFront },
+  { label: "Prices & currency", prompt: "Explain prices and currency conversion", icon: Sparkles },
+  {
+    label: "Sourcing & shipping",
+    prompt: "Explain sourcing, shipping, and import costs",
+    icon: Ship,
+  },
+  {
+    label: "Saved cars & compare",
+    prompt: "How do favorites and compare work?",
+    icon: GitCompareArrows,
+  },
+  {
+    label: "Prepare a quote",
+    prompt: "What should I include in a quote request?",
+    icon: MessageCircle,
+  },
+  { label: "Spare parts", prompt: "How do I request a spare part?", icon: CircleHelp },
 ];
 
-const welcome = "I can help you use AWA AUTO MALL, understand vehicle listings, compare options, prepare a sourcing request, and know what information to provide before contacting the team. What would you like to do?";
+const welcome =
+  "I am the AWA Assistant. I can guide you through vehicle search, specifications, indicative pricing, sourcing, shipping, saved cars, comparison, spare-parts requests, and the information our team needs for a quote. I provide general guidance—not a final price, customs ruling, inspection report, or purchase confirmation.";
 
-function helpReply(question: string): string {
+const carsActions: ChatAction[] = [
+  { label: "Browse cars", href: "/cars" },
+  { label: "Request a vehicle", href: "/request-vehicle" },
+];
+const contactActions: ChatAction[] = [
+  { label: "Contact team", href: "/contact" },
+  { label: "WhatsApp", href: "https://wa.me/971586106612" },
+];
+
+function replyFor(question: string): AssistantReply {
   const q = question.toLowerCase();
-  if (q.includes("price") || q.includes("currency") || q.includes("usd") || q.includes("ghs") || q.includes("exchange")) return "Prices may be live inventory prices or indicative sourcing estimates. Use the currency selector on the Cars page to view the display currency; changing it updates the visible vehicle prices, while the final invoice is confirmed by the AWA team. A range usually reflects supplier, specification, shipping, duty, or availability differences. Before paying, ask for a written quote that confirms the vehicle, condition, mileage, shipping, destination, duties, port fees, and delivery timeline.";
-  if (q.includes("ship") || q.includes("import") || q.includes("delivery") || q.includes("custom") || q.includes("port")) return "AWA sources vehicles internationally, including from Guangzhou, China. Shipping time and total landed cost depend on the vehicle, destination country, port, shipping method, customs rules, duties, port charges, insurance, and local delivery. To receive a useful estimate, prepare your destination city or port, preferred vehicle, budget, and whether you need door-to-door delivery. Treat any displayed delivery wording as an estimate until the team confirms it for your destination.";
-  if (q.includes("find") || q.includes("search") || q.includes("filter") || q.includes("vehicle") || q.includes("car")) return "Open Cars to browse the inventory. You can search by make or model and narrow results by vehicle type, condition, year, and other available filters. Open a vehicle card for its specifications, images, price, availability, and request options. If you do not see the exact model you want, use Request a Vehicle and include make, model, year range, condition, budget, destination, and any must-have features.";
-  if (q.includes("favorite") || q.includes("save") || q.includes("compare") || q.includes("shortlist")) return "Use the heart icon to save vehicles to Saved, then use the comparison tools to review shortlisted vehicles side by side. Compare price, year, condition, mileage, fuel, transmission, availability, and key specifications. Saving a vehicle does not reserve it; availability and pricing still need to be confirmed by AWA before purchase.";
-  if (q.includes("request") || q.includes("inquir") || q.includes("quote") || q.includes("buy") || q.includes("order")) return "For a quote or sourcing request, provide your full name, email or phone, target vehicle, budget, destination, preferred condition, and timing. Mention whether you need financing, shipping, customs guidance, or a trade-in discussion. The team can then check availability, validate the specification, and return a clearer quote. Do not send passwords, card numbers, or sensitive identity documents in chat.";
-  if (q.includes("part") || q.includes("spare") || q.includes("accessor")) return "For spare parts, share the vehicle make, model, year, engine or chassis number if available, the exact part name, quantity, and destination. Compatibility should be confirmed against the vehicle details before ordering. If the part is not listed, submit a request and the sourcing team can check supplier availability.";
-  if (q.includes("contact") || q.includes("human") || q.includes("agent") || q.includes("whatsapp")) return "You can contact the team through the Contact page, the phone details in the footer, or WhatsApp for a direct conversation. Include the vehicle link or model, your destination, budget, and the specific question so the team can respond faster. WhatsApp is a contact option—not the only way to get help; this assistant can explain the site and prepare your request first.";
-  if (q.includes("admin") || q.includes("api") || q.includes("login")) return "The customer-facing site does not require an admin login. Admin tools are for authorized AWA staff to manage vehicles, parts, inquiries, orders, articles, and settings. Customers should use the public Cars, Request a Vehicle, Contact, Saved, and Compare features.";
-  return "I can help with vehicle search, live or indicative prices, currency display, sourcing, shipping, spare parts, saved cars, comparison, and preparing a quote request. Try one of the topic buttons above, or ask a specific question such as ‘What should I include in a sourcing request?’";
+  if (
+    q.includes("price") ||
+    q.includes("currency") ||
+    q.includes("usd") ||
+    q.includes("ghs") ||
+    q.includes("aed") ||
+    q.includes("cny") ||
+    q.includes("exchange")
+  ) {
+    return {
+      content:
+        "The currency selector changes the display currency for easier comparison. Displayed conversion is indicative and may use a configured reference rate; it is not a locked quotation. Before making a purchase, ask AWA to confirm the vehicle price, currency, supplier charges, inspection, inland transport, freight, insurance, duties, port fees, local delivery, and the validity period of the quote. A final invoice should identify the exact vehicle or part and the destination.",
+      actions: carsActions,
+    };
+  }
+  if (
+    q.includes("ship") ||
+    q.includes("import") ||
+    q.includes("delivery") ||
+    q.includes("custom") ||
+    q.includes("port") ||
+    q.includes("duty")
+  ) {
+    return {
+      content:
+        "Shipping and landed cost depend on the vehicle, destination city or port, shipping method, inspection, insurance, customs classification, import duties, port charges, local clearance, and last-mile delivery. For a useful estimate, send the destination country and port, vehicle link or specification, target budget, preferred delivery timing, and whether you need port-to-port or door-to-door support. Treat delivery wording on the site as guidance until the AWA team confirms it in writing.",
+      actions: [...carsActions, { label: "Shipping information", href: "/shipping" }],
+    };
+  }
+  if (
+    q.includes("find") ||
+    q.includes("search") ||
+    q.includes("filter") ||
+    q.includes("vehicle") ||
+    q.includes("car") ||
+    q.includes("suv") ||
+    q.includes("sedan")
+  ) {
+    return {
+      content:
+        "Start on Cars and search by make or model. Use the available type, condition, year, fuel, transmission, and availability filters to narrow the list. Open a vehicle detail page to review images, specifications, indicative price, availability, and inquiry options. If the exact vehicle is not listed, send a sourcing brief with make, model, year range, condition, budget, destination, mileage target, fuel, transmission, colour, and must-have features.",
+      actions: carsActions,
+    };
+  }
+  if (
+    q.includes("favorite") ||
+    q.includes("save") ||
+    q.includes("compare") ||
+    q.includes("shortlist")
+  ) {
+    return {
+      content:
+        "Use the heart icon on a vehicle card or detail page to save a shortlist locally on your device. Open Saved to review those vehicles. Compare up to three vehicles side by side using year, condition, mileage, fuel, transmission, availability, price display, and sourcing notes. Saving or comparing does not reserve a vehicle, hold a price, or confirm availability; ask the team for a current written quote.",
+      actions: [
+        { label: "Saved vehicles", href: "/favorites" },
+        { label: "Compare vehicles", href: "/compare" },
+      ],
+    };
+  }
+  if (
+    q.includes("request") ||
+    q.includes("inquir") ||
+    q.includes("quote") ||
+    q.includes("buy") ||
+    q.includes("order") ||
+    q.includes("budget")
+  ) {
+    return {
+      content:
+        "A strong request includes your name, phone or WhatsApp, email, destination market or port, make and model, year range, new or pre-owned preference, budget and currency, quantity, mileage or specification requirements, colour, timing, and any inspection or shipping needs. Include a vehicle link when available. Do not send passwords, card numbers, identity documents, or private banking information. AWA will confirm availability, specification, final pricing, shipping, and payment instructions through the proper business channel.",
+      actions: [{ label: "Open sourcing form", href: "/request-vehicle" }, ...contactActions],
+    };
+  }
+  if (
+    q.includes("part") ||
+    q.includes("spare") ||
+    q.includes("accessor") ||
+    q.includes("component")
+  ) {
+    return {
+      content:
+        "For a spare-parts request, provide the vehicle make, model, year, engine or chassis/VIN details when appropriate, exact part name or part number, photos if useful, quantity, condition preference, and destination. Compatibility must be checked against the vehicle before ordering. Ask for availability, genuine/aftermarket status, warranty or return terms, shipping, and the final landed cost. Spare-parts catalog activation remains a separate phase from the initial car-marketplace launch.",
+      actions: [{ label: "Spare parts", href: "/spare-parts" }, ...contactActions],
+    };
+  }
+  if (
+    q.includes("360") ||
+    q.includes("image") ||
+    q.includes("inspection") ||
+    q.includes("condition")
+  ) {
+    return {
+      content:
+        "Use the image gallery and vehicle specifications on each detail page. Where a 360-degree asset is available, open the viewer to inspect the exterior presentation. Images are not a substitute for a current inspection report: ask AWA to confirm mileage, title/ownership information, accident history where available, mechanical condition, documents, and the date of the latest inspection before purchase.",
+      actions: carsActions,
+    };
+  }
+  if (q.includes("track") || q.includes("order status") || q.includes("shipment status")) {
+    return {
+      content:
+        "Use Track Order with the order number and the phone number or email used for confirmation. The lookup is intentionally protected. If the order cannot be found, check the exact order number and confirmation contact, then contact AWA rather than sending order details in a public chat.",
+      actions: [{ label: "Track an order", href: "/track-order" }, ...contactActions],
+    };
+  }
+  if (
+    q.includes("contact") ||
+    q.includes("human") ||
+    q.includes("agent") ||
+    q.includes("whatsapp") ||
+    q.includes("map") ||
+    q.includes("location")
+  ) {
+    return {
+      content:
+        "For a human response, use the Contact page or WhatsApp. Include the vehicle or part link, destination, budget, and the exact question so the team can respond efficiently. AWA is based in Guangzhou, China; use the published contact details and request confirmation before sending documents or payment.",
+      actions: contactActions,
+    };
+  }
+  if (q.includes("admin") || q.includes("api") || q.includes("login")) {
+    return {
+      content:
+        "The customer site does not require an admin login. Authorized AWA staff use the private admin area to manage vehicles, parts, inquiries, orders, articles, settings, and analytics. Customer information should be submitted through the public inquiry form or an approved AWA contact channel.",
+      actions: [{ label: "Customer contact", href: "/contact" }],
+    };
+  }
+  return {
+    content:
+      "I can help with vehicle search, filters, specifications, indicative prices, GHS/USD/AED/CNY display, sourcing, shipping, spare parts, inspection questions, saved cars, comparison, order tracking, and preparing a quote request. Try a quick-help topic or ask something specific such as ‘What information should I send for a Land Cruiser quote?’",
+    actions: carsActions,
+  };
 }
 
 export function AIChatWidget() {
@@ -33,30 +193,168 @@ export function AIChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
 
-  async function ask(content: string) {
+  function openAssistant() {
+    setOpen(true);
+    trackAnalytics("assistant_open", "assistant");
+  }
+
+  function ask(content: string) {
     const question = content.trim();
     if (!question || busy) return;
     const next = [...messages, { role: "user" as const, content: question }];
-    setMessages(next); setInput(""); setBusy(true);
-    try {
-      const response = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next }) });
-      const data = await response.json().catch(() => ({}));
-      const answer = response.ok && typeof data.message === "string" && data.message.trim() ? data.message : helpReply(question);
-      setMessages([...next, { role: "assistant", content: answer }]);
-    } catch {
-      setMessages([...next, { role: "assistant", content: helpReply(question) }]);
-    } finally { setBusy(false); }
+    setMessages(next);
+    setInput("");
+    setBusy(true);
+    trackAnalytics("assistant_question", "assistant", undefined, { length: question.length });
+    window.setTimeout(() => {
+      const answer = replyFor(question);
+      setMessages([...next, { role: "assistant", ...answer }]);
+      setBusy(false);
+    }, 260);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); void ask(input); }
-  return <>
-    {open && <section className="fixed bottom-[calc(10.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex max-h-[min(620px,calc(100dvh-8rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:bottom-24 sm:right-5" aria-label="AWA AUTO MALL AI chat">
-      <div className="flex items-center justify-between bg-navy p-4 text-primary-foreground"><div className="flex items-center gap-2"><Bot className="h-5 w-5" /><div><strong className="block text-sm uppercase">AWA Assistant</strong><span className="text-[11px] text-primary-foreground/70">Vehicle and website help</span></div></div><button type="button" onClick={() => setOpen(false)} aria-label="Close chat" className="rounded-full p-1 hover:bg-white/10"><X className="h-5 w-5" /></button></div>
-      <div className="border-b border-border bg-secondary/50 p-3"><p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground"><CircleHelp className="h-3.5 w-3.5" /> Quick help</p><div className="grid grid-cols-2 gap-2">{topics.map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => void ask(prompt)} disabled={busy} className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left text-[11px] font-semibold leading-tight transition-colors hover:border-primary hover:text-primary disabled:opacity-50"><Icon className="h-3.5 w-3.5 shrink-0" />{label}</button>)}</div></div>
-      <div className="flex min-h-32 flex-1 flex-col gap-3 overflow-y-auto p-4 text-sm">{messages.length === 0 && <div className="space-y-3"><p className="bg-secondary px-3 py-2 leading-5 text-foreground">{welcome}</p><div className="flex flex-wrap gap-2 text-xs"><a href="/cars" className="inline-flex items-center gap-1 font-bold text-primary hover:underline">Browse cars <ChevronRight className="h-3 w-3" /></a><a href="/request-vehicle" className="inline-flex items-center gap-1 font-bold text-primary hover:underline">Request a vehicle <ChevronRight className="h-3 w-3" /></a><a href="/favorites" className="inline-flex items-center gap-1 font-bold text-primary hover:underline"><Heart className="h-3 w-3" /> Saved cars</a></div></div>}{messages.map((message, index) => <p key={`${message.role}-${index}`} className={message.role === "user" ? "max-w-[88%] self-end rounded-lg bg-primary px-3 py-2 leading-5 text-primary-foreground" : "max-w-[94%] rounded-lg bg-secondary px-3 py-2 leading-5 text-foreground"}>{message.content}</p>)}{busy && <p className="text-muted-foreground">Checking that for you…</p>}</div>
-      <form onSubmit={submit} className="flex gap-2 border-t border-border p-3"><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask about cars, prices, shipping…" aria-label="Chat message" className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /><Button type="submit" size="icon" aria-label="Send message" disabled={busy || !input.trim()}><Send className="h-4 w-4" /></Button></form>
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[10px] text-muted-foreground"><span>Do not send passwords or payment details.</span><a href="/contact" className="inline-flex items-center gap-1 font-bold text-primary hover:underline"><MessageCircle className="h-3 w-3" /> Contact team</a></div>
-    </section>}
-    <button type="button" onClick={() => setOpen(!open)} aria-label={open ? "Close AI chat" : "Open AI chat"} className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-20 z-40 grid h-12 w-12 place-items-center rounded-full bg-navy text-primary-foreground shadow-lg transition-transform hover:scale-105 sm:bottom-5 sm:right-24 sm:h-14 sm:w-14"><Bot className="h-6 w-6" /></button>
-  </>;
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    ask(input);
+  }
+
+  return (
+    <>
+      {open && (
+        <section
+          className="fixed bottom-[calc(10.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex max-h-[min(680px,calc(100dvh-8rem))] w-[min(440px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:bottom-24 sm:right-5"
+          aria-label="AWA AUTO MALL guided assistant"
+        >
+          <div className="flex items-center justify-between bg-navy p-4 text-primary-foreground">
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              <div>
+                <strong className="block text-sm uppercase">AWA Assistant</strong>
+                <span className="text-[11px] text-primary-foreground/70">
+                  Guided vehicle sourcing help
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close assistant"
+              className="rounded-full p-1 hover:bg-white/10"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="border-b border-border bg-secondary/50 p-3">
+            <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <CircleHelp className="h-3.5 w-3.5" /> Quick help
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {topics.map(({ label, prompt, icon: Icon }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => ask(prompt)}
+                  disabled={busy}
+                  className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left text-[11px] font-semibold leading-tight transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex min-h-40 flex-1 flex-col gap-3 overflow-y-auto p-4 text-sm">
+            {messages.length === 0 && (
+              <div className="space-y-3">
+                <p className="bg-secondary px-3 py-2 leading-5 text-foreground">{welcome}</p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {carsActions.map((action) => (
+                    <a
+                      key={action.href}
+                      href={action.href}
+                      className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
+                    >
+                      {action.label} <ChevronRight className="h-3 w-3" />
+                    </a>
+                  ))}
+                  <a
+                    href="/favorites"
+                    className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
+                  >
+                    <Heart className="h-3 w-3" /> Saved cars
+                  </a>
+                </div>
+              </div>
+            )}
+            {messages.map((message, index) => (
+              <div
+                key={`${message.role}-${index}`}
+                className={message.role === "user" ? "max-w-[90%] self-end" : "max-w-[96%]"}
+              >
+                <p
+                  className={
+                    message.role === "user"
+                      ? "rounded-lg bg-primary px-3 py-2 leading-5 text-primary-foreground"
+                      : "rounded-lg bg-secondary px-3 py-2 leading-5 text-foreground"
+                  }
+                >
+                  {message.content}
+                </p>
+                {message.role === "assistant" && message.actions && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {message.actions.map((action) => (
+                      <a
+                        key={`${action.label}-${action.href}`}
+                        href={action.href}
+                        target={action.href.startsWith("http") ? "_blank" : undefined}
+                        rel={action.href.startsWith("http") ? "noreferrer" : undefined}
+                        className="inline-flex items-center gap-1 border border-primary px-2 py-1 text-[11px] font-bold text-primary hover:bg-primary hover:text-primary-foreground"
+                      >
+                        {action.label} <ChevronRight className="h-3 w-3" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {busy && <p className="text-muted-foreground">Preparing guidance…</p>}
+          </div>
+          <form onSubmit={submit} className="flex gap-2 border-t border-border p-3">
+            <input
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Ask about cars, quotes, shipping…"
+              aria-label="Assistant question"
+              className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              aria-label="Send question"
+              disabled={busy || !input.trim()}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+          <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[10px] text-muted-foreground">
+            <span>Guidance only. Never send passwords or payment details.</span>
+            <a
+              href="/contact"
+              className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
+            >
+              <MessageCircle className="h-3 w-3" /> Contact team
+            </a>
+          </div>
+        </section>
+      )}
+      <button
+        type="button"
+        onClick={open ? () => setOpen(false) : openAssistant}
+        aria-label={open ? "Close AWA Assistant" : "Open AWA Assistant"}
+        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-20 z-40 grid h-12 w-12 place-items-center rounded-full bg-navy text-primary-foreground shadow-lg transition-transform hover:scale-105 sm:bottom-5 sm:right-24 sm:h-14 sm:w-14"
+      >
+        <Bot className="h-6 w-6" />
+      </button>
+    </>
+  );
 }
