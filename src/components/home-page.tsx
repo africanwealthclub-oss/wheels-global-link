@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Wrench,
 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,8 @@ import { vehicles } from "@/lib/inventory";
 import { localArticles } from "@/lib/news";
 import { ContactStrip } from "./site-shell";
 import { SectionHeading, VehicleGrid } from "./marketplace";
-import { NewsGrid } from "./news";
-import { API_BASE_URL, submitInquiry } from "@/lib/vehicle-platform";
+import { NewsGrid, type NewsArticle } from "./news";
+import { API_BASE_URL, publicNews, publicVehicles, submitInquiry } from "@/lib/vehicle-platform";
 
 const reveal = {
   initial: { opacity: 0, y: 24 },
@@ -34,10 +34,40 @@ const reveal = {
 };
 
 export function HomePage() {
+  const [catalog, setCatalog] = useState(vehicles);
+  const [articles, setArticles] = useState<NewsArticle[]>(localArticles);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([publicVehicles(), publicNews()]).then(
+      ([vehicleResult, newsResult]) => {
+        if (!active) return;
+        if (vehicleResult.status === "fulfilled" && vehicleResult.value.length) {
+          setCatalog(vehicleResult.value);
+        }
+        if (
+          newsResult.status === "fulfilled" &&
+          Array.isArray(newsResult.value) &&
+          newsResult.value.length
+        ) {
+          setArticles(
+            newsResult.value.map((article) => ({
+              ...article,
+              cover_image: article.cover_image ?? undefined,
+            })),
+          );
+        }
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <>
       <Hero />
-      <SearchSection />
+      <SearchSection items={catalog} />
       <BrowseByCategory />
       <motion.section {...reveal} className="section-pad bg-secondary">
         <div className="container-shell">
@@ -46,7 +76,7 @@ export function HomePage() {
             title="Featured Vehicles"
             copy="Explore vehicles by brand, model, or type. Inventory shown is representative and subject to confirmation."
           />
-          <VehicleGrid items={vehicles.slice(0, 3)} />
+          <VehicleGrid items={catalog.slice(0, 3)} />
           <div className="mt-10 text-center">
             <Button asChild size="lg">
               <Link to="/cars">
@@ -57,8 +87,8 @@ export function HomePage() {
           </div>
         </div>
       </motion.section>
-      <MarketplacePreview />
-      <NewsSection />
+      <MarketplacePreview items={catalog} />
+      <NewsSection articles={articles} />
       <GlobalSection />
       <WhySection />
       <ProcessSection />
@@ -149,9 +179,9 @@ function Hero() {
   );
 }
 
-function SearchSection() {
+function SearchSection({ items }: { items: typeof vehicles }) {
   const [query, setQuery] = useState("");
-  const shown = vehicles.filter((vehicle) =>
+  const shown = items.filter((vehicle) =>
     `${vehicle.brand} ${vehicle.model} ${vehicle.category ?? ""}`
       .toLowerCase()
       .includes(query.toLowerCase()),
@@ -301,8 +331,8 @@ function BrowseByCategory() {
   );
 }
 
-function MarketplacePreview() {
-  const models = [...new Set(vehicles.map((vehicle) => vehicle.model))].slice(0, 4);
+function MarketplacePreview({ items }: { items: typeof vehicles }) {
+  const models = [...new Set(items.map((vehicle) => vehicle.model))].slice(0, 4);
 
   return (
     <motion.section {...reveal} className="section-pad bg-navy text-primary-foreground">
@@ -369,7 +399,7 @@ function MarketplacePreview() {
   );
 }
 
-function NewsSection() {
+function NewsSection({ articles }: { articles: NewsArticle[] }) {
   return (
     <motion.section {...reveal} className="section-pad bg-secondary">
       <div className="container-shell">
@@ -386,7 +416,7 @@ function NewsSection() {
           </Button>
         </div>
         <div className="mt-10">
-          <NewsGrid articles={localArticles.slice(0, 3)} />
+          <NewsGrid articles={articles.slice(0, 3)} />
         </div>
       </div>
     </motion.section>
