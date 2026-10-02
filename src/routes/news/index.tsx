@@ -26,9 +26,9 @@ function NewsPage() {
     publicNews()
       .then((data) => {
         const incoming = Array.isArray(data) ? data : [];
-        setArticles(incoming.length || !import.meta.env.DEV ? incoming : localArticles);
+        setArticles(incoming.length ? incoming : localArticles);
       })
-      .catch(() => setArticles(import.meta.env.DEV ? localArticles : []))
+      .catch(() => setArticles(localArticles))
       .finally(() => setLoading(false));
   }, []);
   return (

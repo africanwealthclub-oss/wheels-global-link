@@ -19,11 +19,7 @@ function NewsDetailPage() {
   useEffect(() => {
     publicNews(slug)
       .then((data) => setArticle(Array.isArray(data) ? null : data))
-      .catch(() =>
-        setArticle(
-          import.meta.env.DEV ? localArticles.find((item) => item.slug === slug) || null : null,
-        ),
-      )
+      .catch(() => setArticle(localArticles.find((item) => item.slug === slug) || null))
       .finally(() => setLoading(false));
   }, [slug]);
   return (
