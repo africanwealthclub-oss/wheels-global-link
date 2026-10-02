@@ -26,13 +26,12 @@ const navItems: NavItem[] = [
   { label: "Vehicles", href: "/admin/vehicles", icon: CarFront },
   { label: "Inquiries", href: "/admin/inquiries", icon: ClipboardList },
   { label: "Orders", href: "/admin/orders", icon: PackageCheck },
-  { label: "Content", href: "/admin/content", icon: FileText },
+  { label: "Blog / Articles", href: "/admin/content", icon: FileText },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 const tabItems = navItems.slice(0, 4);
 const moreItems = navItems.slice(4);
-const DEMO_SESSION_KEY = "awa-admin-demo-session";
 const TOKEN_KEY = "awa-admin-jwt";
 
 export function AdminModuleShell({
@@ -48,9 +47,7 @@ export function AdminModuleShell({
   const [checkingSession, setCheckingSession] = useState(true);
   useEffect(() => {
     let active = true;
-    const hasSession =
-      Boolean(window.localStorage.getItem(TOKEN_KEY)) ||
-      window.localStorage.getItem(DEMO_SESSION_KEY) === "true";
+    const hasSession = Boolean(window.localStorage.getItem(TOKEN_KEY));
     if (hasSession) {
       setAuthenticated(true);
       setCheckingSession(false);
@@ -73,7 +70,6 @@ export function AdminModuleShell({
       eyebrow={eyebrow}
       onLogout={() => {
         void adminLogout();
-        window.localStorage.removeItem(DEMO_SESSION_KEY);
         setAuthenticated(false);
       }}
     >
@@ -102,11 +98,6 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
   useEffect(() => {
     checkApiReady().then(setApiAvailable);
   }, []);
-  const startDemo = () => {
-    window.localStorage.setItem(DEMO_SESSION_KEY, "true");
-    setError("");
-    onAuthenticated();
-  };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -115,9 +106,7 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
       return;
     }
     if (!API_BASE_URL || !apiAvailable) {
-      setError(
-        "The live API is not connected. Use Continue with demo data, or configure VITE_API_BASE_URL first.",
-      );
+      setError("The live API is not connected. Configure VITE_API_BASE_URL and try again.");
       return;
     }
     setBusy(true);
@@ -191,22 +180,10 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
-        <div className="my-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-widest text-slate-300">
-          <span className="h-px flex-1 bg-slate-200" />
-          or
-          <span className="h-px flex-1 bg-slate-200" />
-        </div>
-        <button
-          type="button"
-          onClick={startDemo}
-          className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary"
-        >
-          Continue with demo data
-        </button>
         <p className="mt-4 text-center text-xs leading-5 text-slate-400">
           {apiAvailable
             ? "Live API detected. Use your configured admin credentials."
-            : "API is not connected. Demo data is available so you can preview the dashboard."}
+            : "API is not connected. Contact the system administrator to configure the admin API."}
         </p>
       </section>
     </main>
@@ -309,11 +286,11 @@ function AdminWorkspace({
           <div className="mx-auto max-w-[1440px]">
             <div className="mb-6 hidden grid-cols-4 gap-3 lg:grid">
               <Pulse label="Workspace status" value="Ready" icon={Activity} tone="green" />
-              <Pulse label="Today's activity" value="24 updates" icon={Bell} tone="blue" />
-              <Pulse label="Needs attention" value="8 items" icon={ClipboardList} tone="orange" />
+              <Pulse label="Today's activity" value="—" icon={Bell} tone="blue" />
+              <Pulse label="Needs attention" value="—" icon={ClipboardList} tone="orange" />
               <Pulse
                 label="Data source"
-                value={API_BASE_URL ? "Live API / fallback" : "Demo data"}
+                value={API_BASE_URL ? "Live API" : "Unavailable"}
                 icon={Wifi}
                 tone="purple"
               />
@@ -334,7 +311,7 @@ function AdminWorkspace({
                 <div className="rounded-xl bg-white p-4">
                   <p className="text-sm font-bold">Confirm the source</p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Demo inventory remains active until the PHP API health check succeeds.
+                    Live inventory appears after the PHP API health check succeeds.
                   </p>
                 </div>
                 <div className="rounded-xl bg-white p-4">
@@ -432,12 +409,12 @@ function SourceCard({ className = "", light = false }: { className?: string; lig
         className={`flex items-center gap-2 text-xs font-bold uppercase ${light ? "text-emerald-600" : "text-emerald-300"}`}
       >
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        {API_BASE_URL ? "API configured · live when healthy" : "Demo data mode"}
+        {API_BASE_URL ? "API configured · live data only" : "API unavailable"}
       </p>
       <p
         className={`mt-2 break-words text-xs leading-5 ${light ? "text-slate-500" : "text-white/50"}`}
       >
-        {API_BASE_URL || "Local demo data is active until the API health check succeeds."}
+        {API_BASE_URL || "Connect the API to load live workspace data."}
       </p>
     </div>
   );

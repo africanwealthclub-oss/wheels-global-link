@@ -21,9 +21,10 @@ import showroom from "@/assets/awa-showroom.jpg";
 import globalImage from "@/assets/awa-global.jpg";
 import { vehicles } from "@/lib/inventory";
 import { localArticles } from "@/lib/news";
-import { ContactStrip, whatsappUrl } from "./site-shell";
+import { ContactStrip } from "./site-shell";
 import { SectionHeading, VehicleGrid } from "./marketplace";
 import { NewsGrid } from "./news";
+import { API_BASE_URL, submitInquiry } from "@/lib/vehicle-platform";
 
 const reveal = {
   initial: { opacity: 0, y: 24 },
@@ -494,9 +495,11 @@ function ProcessSection() {
 
 export function InquirySection() {
   const [error, setError] = useState("");
-  function submit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    setError("");
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const name = String(fd.get("name") || "").trim();
     const phone = String(fd.get("phone") || "").trim();
     const details = String(fd.get("details") || "").trim();
@@ -504,8 +507,28 @@ export function InquirySection() {
       setError("Please complete your name, phone number, and vehicle details.");
       return;
     }
-    const msg = `AWA AUTO MALL inquiry\nName: ${name}\nPhone: ${phone}\nEmail: ${String(fd.get("email") || "")}\nLooking for: ${String(fd.get("type") || "")}\nDetails: ${details}\nMake/Model: ${String(fd.get("model") || "")}\nMessage: ${String(fd.get("message") || "")}`;
-    window.open(whatsappUrl(msg), "_blank", "noopener,noreferrer");
+    if (!API_BASE_URL) {
+      setError("The inquiry service is not configured yet. Please try again later.");
+      return;
+    }
+    try {
+      await submitInquiry({
+        customer_name: name,
+        email: String(fd.get("email") || "").trim() || null,
+        phone,
+        type: "vehicle_quote",
+        request_text: `${details}${fd.get("model") ? `; preferred make/model: ${String(fd.get("model"))}` : ""}${fd.get("message") ? `; message: ${String(fd.get("message"))}` : ""}`,
+        source: "homepage-inquiry",
+      });
+      form.reset();
+      setError("Your inquiry has been sent to the AWA team. We will contact you shortly.");
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "We could not send your inquiry. Please try again.",
+      );
+    }
   }
   return (
     <section className="section-pad bg-navy text-primary-foreground" id="inquiry">
@@ -518,12 +541,12 @@ export function InquirySection() {
             copy="Tell us what you need and our team will help you with the available options."
             inverse
           />
-          <a href={whatsappUrl()} className="inline-flex items-center gap-2 font-bold">
+          <p className="flex items-center gap-2 font-bold">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-primary">
               <Headphones className="h-5 w-5" />
             </span>
-            Chat With Us On WhatsApp
-          </a>
+            Send your brief and our team will follow up directly.
+          </p>
         </div>
         <form
           onSubmit={submit}

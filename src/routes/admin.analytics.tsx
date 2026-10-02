@@ -54,7 +54,7 @@ function AnalyticsAdminPage() {
             Understand what customers discover, save, and request.
           </p>
           <p className="mt-1 text-xs font-semibold text-slate-400">
-            {loading ? "Syncing…" : live ? "Live API data · last 30 days" : "Demo data"}
+            {loading ? "Syncing…" : live ? "Live API data · last 30 days" : "API unavailable"}
           </p>
         </div>
         <Button variant="outline" onClick={load}>
@@ -137,10 +137,10 @@ function AnalyticsAdminPage() {
           </div>
         </section>
       </div>
-      {!live && (
-        <div className="mt-6 rounded-2xl border border-dashed border-primary/30 bg-primary/[.04] p-5 text-sm text-slate-600">
-          <strong className="block text-slate-900">Demo data mode</strong>Configure the API to
-          replace zero-state analytics with live events.
+      {!live && !loading && (
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
+          Live analytics are unavailable. Configure the API and sign in with an authorized admin
+          account.
         </div>
       )}
     </AdminModuleShell>

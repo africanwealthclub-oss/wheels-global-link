@@ -2,7 +2,6 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { parts } from "@/lib/inventory";
-import { whatsappUrl } from "@/components/site-shell";
 export const Route = createFileRoute("/spare-parts/$slug")({
   loader: ({ params }) => {
     const part = parts.find((p) => p.slug === params.slug);
@@ -67,9 +66,7 @@ function PartDetail() {
               </div>
             </dl>
             <Button asChild variant="automotive" size="lg" className="mt-7 w-full">
-              <a href={whatsappUrl(`Hello AWA AUTO MALL, please help me source the ${p.name}.`)}>
-                Request Part
-              </a>
+              <Link to="/request-vehicle">Request Part</Link>
             </Button>
             <p className="mt-4 text-xs text-muted-foreground">
               Provide your vehicle identification details or part number when available so

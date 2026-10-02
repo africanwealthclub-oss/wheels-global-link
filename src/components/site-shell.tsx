@@ -26,7 +26,6 @@ export function SiteHeader() {
           <span>Guangzhou, China · Global vehicle sourcing</span>
           <div className="flex gap-6">
             <a href="tel:+8613026895234">+86 130 2689 5234</a>
-            <a href={whatsappUrl()}>WhatsApp +971 58 610 6612</a>
           </div>
         </div>
       </div>
@@ -141,7 +140,6 @@ export function SiteFooter() {
             <span>Guangzhou, China</span>
             <a href="tel:+8613026895234">+86 130 2689 5234</a>
             <a href="tel:+233592656665">+233 592 656 665</a>
-            <a href={whatsappUrl()}>WhatsApp +971 58 610 6612</a>
             <span>TikTok: AWA Legit Plug</span>
           </div>
         </div>
@@ -169,11 +167,10 @@ export function WhatsAppFloat() {
 }
 export function ContactStrip() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {[
         [Phone, "China phone", "+86 130 2689 5234", "tel:+8613026895234"],
         [Phone, "Ghana phone", "+233 592 656 665", "tel:+233592656665"],
-        [MessageCircle, "WhatsApp", "+971 58 610 6612", whatsappUrl()],
         [
           MapPin,
           "Location",

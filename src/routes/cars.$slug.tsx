@@ -13,7 +13,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getVehicleFallbackImage, vehicles } from "@/lib/inventory";
 import { getFavoriteSlugs, publicVehicleBySlug, toggleFavorite } from "@/lib/vehicle-platform";
-import { whatsappUrl } from "@/components/site-shell";
 
 export const Route = createFileRoute("/cars/$slug")({
   loader: async ({ params }) => {
@@ -177,12 +176,12 @@ function VehicleDetail() {
                 {saved ? "Saved Vehicle" : "Save Vehicle"}
               </Button>
               <Button asChild size="lg">
-                <a href={whatsappUrl(requestMessage)}>Request Information</a>
+                <Link to="/request-vehicle">Request Information</Link>
               </Button>
               <Button asChild variant="automotive" size="lg">
-                <a href={whatsappUrl(requestMessage)}>
-                  <MessageCircle /> Chat on WhatsApp
-                </a>
+                <Link to="/request-vehicle">
+                  <MessageCircle /> Send an inquiry
+                </Link>
               </Button>
             </div>
             <p className="mt-6 text-xs leading-5 text-muted-foreground">

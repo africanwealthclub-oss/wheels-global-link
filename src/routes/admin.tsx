@@ -22,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API_BASE_URL, apiRequest, checkApiReady } from "@/lib/vehicle-platform";
-import { vehicles } from "@/lib/inventory";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin Dashboard | AWA AUTO MALL" }] }),
@@ -36,67 +35,28 @@ type Summary = {
   newInquiries?: number;
   activeOrders: number;
 };
-const previewSummary: Summary = {
-  totalVehicles: vehicles.length,
-  availableVehicles: 4,
-  inquiries: 18,
-  activeOrders: 7,
+const emptySummary: Summary = {
+  totalVehicles: 0,
+  availableVehicles: 0,
+  inquiries: 0,
+  activeOrders: 0,
 };
-const inquiries = [
-  {
-    name: "Kwame Mensah",
-    type: "Vehicle quote",
-    vehicle: "2024 Toyota Land Cruiser",
-    time: "12 min ago",
-    status: "New",
-  },
-  {
-    name: "Sarah Okafor",
-    type: "Sourcing request",
-    vehicle: "2023 Lexus RX 350",
-    time: "48 min ago",
-    status: "Contacted",
-  },
-  {
-    name: "David Chen",
-    type: "Shipping question",
-    vehicle: "BMW 5 Series",
-    time: "2 hrs ago",
-    status: "New",
-  },
-  {
-    name: "Amara Bello",
-    type: "Vehicle quote",
-    vehicle: "Range Rover Sport",
-    time: "Yesterday",
-    status: "Quoted",
-  },
-];
-const orders = [
-  {
-    reference: "AWA-24091",
-    customer: "Michael Mensah",
-    vehicle: "Toyota Land Cruiser",
-    status: "Inspection / Preparation",
-    progress: 48,
-  },
-  {
-    reference: "AWA-24088",
-    customer: "Nadia Ibrahim",
-    vehicle: "Lexus RX 350",
-    status: "Export Processing",
-    progress: 66,
-  },
-  {
-    reference: "AWA-24074",
-    customer: "Emeka Nwosu",
-    vehicle: "Mercedes-Benz E-Class",
-    status: "Shipped",
-    progress: 82,
-  },
-];
+const inquiries: Array<{
+  name: string;
+  type: string;
+  vehicle: string;
+  time: string;
+  status: string;
+}> = [];
+const orders: Array<{
+  reference: string;
+  customer: string;
+  vehicle: string;
+  status: string;
+  progress: number;
+}> = [];
 function AdminOverview() {
-  const [summary, setSummary] = useState<Summary>(previewSummary);
+  const [summary, setSummary] = useState<Summary>(emptySummary);
   const [loading, setLoading] = useState(Boolean(API_BASE_URL));
   const [connected, setConnected] = useState(false);
   useEffect(() => {
@@ -132,7 +92,7 @@ function AdminOverview() {
                 ? "Syncing with PHP API…"
                 : connected
                   ? "Last synced just now"
-                  : "Demo data · safe to preview"}
+                  : "API unavailable"}
             </span>
           </div>
           <p className="mt-2 text-sm text-slate-500">
@@ -152,28 +112,28 @@ function AdminOverview() {
         <Metric
           label="Total vehicles"
           value={summary.totalVehicles}
-          change="12%"
+          change="—"
           icon={CarFront}
           tone="blue"
         />
         <Metric
           label="Available vehicles"
           value={summary.availableVehicles}
-          change="8%"
+          change="—"
           icon={ShieldCheck}
           tone="green"
         />
         <Metric
           label="New inquiries"
           value={summary.inquiries}
-          change="24%"
+          change="—"
           icon={ClipboardList}
           tone="orange"
         />
         <Metric
           label="Active orders"
           value={summary.activeOrders}
-          change="5%"
+          change="—"
           icon={PackageCheck}
           tone="purple"
         />
@@ -193,7 +153,7 @@ function AdminOverview() {
             </select>
           </div>
           <div className="mt-6 flex h-48 items-end gap-2 sm:gap-4">
-            {[38, 55, 45, 70, 62, 78, 68, 84, 76, 92, 81, 96].map((height, index) => (
+            {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((height, index) => (
               <div key={index} className="group flex flex-1 flex-col items-center gap-2">
                 <div
                   className="relative w-full rounded-t-md bg-primary/15 transition-colors group-hover:bg-primary"
@@ -270,29 +230,33 @@ function AdminOverview() {
             </Button>
           </div>
           <div className="divide-y divide-slate-100">
-            {inquiries.map((item) => (
-              <div key={item.name} className="flex items-center gap-3 p-4 sm:gap-4 sm:px-6">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                  {item.name
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join("")}
+            {inquiries.length ? (
+              inquiries.map((item) => (
+                <div key={item.name} className="flex items-center gap-3 p-4 sm:gap-4 sm:px-6">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {item.name
+                      .split(" ")
+                      .map((part) => part[0])
+                      .join("")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">{item.name}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {item.type} · {item.vehicle}
+                    </p>
+                  </div>
+                  <div className="hidden text-right sm:block">
+                    <Badge variant={item.status === "New" ? "default" : "secondary"}>
+                      {item.status}
+                    </Badge>
+                    <p className="mt-1 text-[11px] text-slate-400">{item.time}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 sm:hidden" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">{item.name}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {item.type} · {item.vehicle}
-                  </p>
-                </div>
-                <div className="hidden text-right sm:block">
-                  <Badge variant={item.status === "New" ? "default" : "secondary"}>
-                    {item.status}
-                  </Badge>
-                  <p className="mt-1 text-[11px] text-slate-400">{item.time}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-300 sm:hidden" />
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="p-6 text-sm text-slate-500">No inquiries have been received yet.</p>
+            )}
           </div>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -306,28 +270,32 @@ function AdminOverview() {
             <PackageCheck className="text-primary" />
           </div>
           <div className="space-y-5 p-5 sm:p-6">
-            {orders.map((order) => (
-              <div key={order.reference}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-primary">{order.reference}</p>
-                    <p className="mt-1 text-sm font-bold">{order.customer}</p>
-                    <p className="text-xs text-slate-500">{order.vehicle}</p>
+            {orders.length ? (
+              orders.map((order) => (
+                <div key={order.reference}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-primary">{order.reference}</p>
+                      <p className="mt-1 text-sm font-bold">{order.customer}</p>
+                      <p className="text-xs text-slate-500">{order.vehicle}</p>
+                    </div>
+                    <span className="text-right text-[11px] font-semibold text-slate-500">
+                      {order.progress}%<br />
+                      complete
+                    </span>
                   </div>
-                  <span className="text-right text-[11px] font-semibold text-slate-500">
-                    {order.progress}%<br />
-                    complete
-                  </span>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${order.progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">{order.status}</p>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${order.progress}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-slate-500">{order.status}</p>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">No active orders have been created yet.</p>
+            )}
             <Button variant="outline" className="w-full">
               Track all orders <ChevronRight />
             </Button>
@@ -341,10 +309,9 @@ function AdminOverview() {
             <div>
               <h2 className="font-extrabold">API-ready development view</h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                This dashboard currently uses safe preview data. Connect{" "}
-                <code className="font-bold">VITE_API_BASE_URL</code> and the summary loader will
-                request <code className="font-bold">/admin/summary</code>. Add the remaining PHP
-                endpoints without changing the layout.
+                Connect <code className="font-bold">VITE_API_BASE_URL</code> and sign in with an
+                authorized admin account to load live vehicles, inquiries, orders, and metrics from
+                the PHP API.
               </p>
             </div>
           </div>
