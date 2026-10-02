@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { vehicles } from "@/lib/inventory";
 import {
-  API_BASE_URL,
   currencyRates,
   currencySymbols,
   getFavoriteSlugs,
@@ -39,7 +38,9 @@ function CarsPage() {
   const { q, brand, model, carType, condition, year, page } = Route.useSearch();
   const [currency, setCurrency] = useState("USD");
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [catalogVehicles, setCatalogVehicles] = useState(vehicles);
+  const [catalogVehicles, setCatalogVehicles] = useState<typeof vehicles>([]);
+  const [catalogState, setCatalogState] = useState<"loading" | "ready" | "error">("loading");
+  const [catalogError, setCatalogError] = useState("");
   const isDetail = useRouterState({
     select: (state) => state.location.pathname.startsWith("/cars/"),
   });
@@ -47,7 +48,24 @@ function CarsPage() {
     setFavorites(getFavoriteSlugs());
     const storedCurrency = localStorage.getItem("awa-currency") ?? "USD";
     setCurrency(storedCurrency in currencySymbols ? storedCurrency : "USD");
-    if (API_BASE_URL) publicVehicles().then((items) => { if (items.length) setCatalogVehicles(items); }).catch(() => undefined);
+    let cancelled = false;
+    publicVehicles()
+      .then((items) => {
+        if (cancelled) return;
+        setCatalogVehicles(items);
+        setCatalogState("ready");
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message =
+          error instanceof Error ? error.message : "The live catalog could not be loaded.";
+        setCatalogError(message);
+        setCatalogState("error");
+        if (import.meta.env.DEV) setCatalogVehicles(vehicles);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const brands = [...new Set(catalogVehicles.map((v) => v.brand))].sort();
   const models = [...new Set(catalogVehicles.map((v) => v.model))].sort();
@@ -71,7 +89,9 @@ function CarsPage() {
     key: "q" | "brand" | "model" | "carType" | "condition" | "year",
     value: string,
   ) => navigate({ search: (previous) => ({ ...previous, [key]: value, page: 1 }) });
-  const suggestions = q ? catalogVehicles.filter((vehicle) => vehicleMatches(vehicle, q)).slice(0, 5) : [];
+  const suggestions = q
+    ? catalogVehicles.filter((vehicle) => vehicleMatches(vehicle, q)).slice(0, 5)
+    : [];
   const pageSize = 12;
   const pageCount = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(Math.max(page, 1), pageCount);
@@ -223,26 +243,71 @@ function CarsPage() {
               {hasFilters ? "Matching Vehicles" : "Explore All Vehicles"}
             </h2>
           </div>
-          <VehicleGrid items={pricedVehicles} />
-          <div className="mt-10 flex justify-center gap-6 text-sm font-bold uppercase text-primary">
-            {currentPage > 1 && (
-              <button
-                onClick={() => navigate({ search: (p) => ({ ...p, page: currentPage - 1 }) })}
-              >
-                Previous
-              </button>
-            )}
-            <span className="text-muted-foreground">
-              Page {currentPage} of {pageCount}
-            </span>
-            {currentPage < pageCount && (
-              <button
-                onClick={() => navigate({ search: (p) => ({ ...p, page: currentPage + 1 }) })}
-              >
-                Next
-              </button>
-            )}
-          </div>
+          {catalogState === "loading" && (
+            <div className="border border-border bg-background p-8 text-center text-sm text-muted-foreground">
+              Loading the live vehicle catalog…
+            </div>
+          )}
+          {catalogState === "error" && !import.meta.env.DEV && (
+            <div className="border border-destructive/40 bg-background p-8 text-center">
+              <h3 className="text-xl font-bold uppercase">Live inventory unavailable</h3>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+                We could not load current stock. Please try again shortly or send us a sourcing
+                brief.
+              </p>
+              <Button asChild className="mt-5" variant="automotive">
+                <Link to="/request-vehicle">Request a vehicle</Link>
+              </Button>
+            </div>
+          )}
+          {catalogState === "error" && import.meta.env.DEV && (
+            <p className="mb-4 border border-dashed border-primary/50 bg-background p-4 text-sm text-muted-foreground">
+              Development fallback inventory is shown. Live catalog error: {catalogError}
+            </p>
+          )}
+          {catalogState !== "loading" && (catalogState === "ready" || import.meta.env.DEV) && (
+            <>
+              {catalogState === "ready" && catalogVehicles.length === 0 ? (
+                <div className="border border-border bg-background p-8 text-center">
+                  <h3 className="text-xl font-bold uppercase">No vehicles currently published</h3>
+                  <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+                    Our live inventory is currently empty. Send us your requirements and we can
+                    source a match.
+                  </p>
+                  <Button asChild className="mt-5" variant="automotive">
+                    <Link to="/request-vehicle">Request a vehicle</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <VehicleGrid items={pricedVehicles} />
+                  <div className="mt-10 flex justify-center gap-6 text-sm font-bold uppercase text-primary">
+                    {currentPage > 1 && (
+                      <button
+                        onClick={() =>
+                          navigate({ search: (p) => ({ ...p, page: currentPage - 1 }) })
+                        }
+                      >
+                        Previous
+                      </button>
+                    )}
+                    <span className="text-muted-foreground">
+                      Page {currentPage} of {pageCount}
+                    </span>
+                    {currentPage < pageCount && (
+                      <button
+                        onClick={() =>
+                          navigate({ search: (p) => ({ ...p, page: currentPage + 1 }) })
+                        }
+                      >
+                        Next
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </div>
       </section>
     </>
