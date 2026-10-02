@@ -8,10 +8,14 @@ import { PageIntro, SectionHeading } from "@/components/marketplace";
 import { API_BASE_URL, submitInquiry } from "@/lib/vehicle-platform";
 import image from "@/assets/awa-global.jpg";
 export const Route = createFileRoute("/request-vehicle")({
+  validateSearch: (search) => ({
+    vehicle: typeof search.vehicle === "string" ? search.vehicle : "",
+  }),
   head: () => ({ meta: [{ title: "Request a Vehicle | AWA AUTO MALL" }] }),
   component: RequestVehiclePage,
 });
 function RequestVehiclePage() {
+  const { vehicle } = Route.useSearch();
   const [status, setStatus] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,11 +33,11 @@ function RequestVehiclePage() {
         });
         setStatus("Your request has been sent. Our team will review it and contact you shortly.");
       } else {
-        setStatus("The request service is unavailable. Please try again later.");
+        setStatus("The live request service is not configured. Please try again later.");
       }
       (event.target as HTMLFormElement).reset();
-    } catch {
-      setStatus("We could not reach the request service. Please try again later.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "We could not save your request.");
     }
   }
   return (
@@ -82,13 +86,23 @@ function RequestVehiclePage() {
               <Input name="market" placeholder="Ghana, Nigeria, UAE..." />
             </Field>
             <Field label="Preferred make">
-              <Input name="brand" placeholder="Toyota" />
+              <Input name="brand" placeholder="Toyota" defaultValue={vehicle.split(" ")[0] || ""} />
             </Field>
             <Field label="Model">
-              <Input name="model" placeholder="Land Cruiser" />
+              <Input
+                name="model"
+                placeholder="Land Cruiser"
+                defaultValue={vehicle.split(" ").slice(1).join(" ")}
+              />
             </Field>
             <Field label="Year">
-              <Input name="year" type="number" min="1990" max="2030" />
+              <Input
+                name="year"
+                type="number"
+                min="1990"
+                max="2030"
+                defaultValue={vehicle.match(/\b20\d{2}\b/)?.[0] || ""}
+              />
             </Field>
             <Field label="Budget">
               <Input name="budget" placeholder="USD 30,000" />
@@ -109,6 +123,11 @@ function RequestVehiclePage() {
             <Field label="Additional requirements" wide>
               <Textarea
                 name="requirements"
+                defaultValue={
+                  vehicle
+                    ? `Please provide availability, inspection details, final pricing, and shipping options for ${vehicle}.`
+                    : ""
+                }
                 className="min-h-28"
                 placeholder="Mileage, fuel, transmission, colour, delivery timing..."
               />

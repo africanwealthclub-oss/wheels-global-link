@@ -176,10 +176,18 @@ function VehicleDetail() {
                 {saved ? "Saved Vehicle" : "Save Vehicle"}
               </Button>
               <Button asChild size="lg">
-                <Link to="/request-vehicle">Request Information</Link>
+                <Link
+                  to="/request-vehicle"
+                  search={{ vehicle: `${vehicle.year} ${vehicle.brand} ${vehicle.model}` }}
+                >
+                  Request Information
+                </Link>
               </Button>
               <Button asChild variant="automotive" size="lg">
-                <Link to="/request-vehicle">
+                <Link
+                  to="/request-vehicle"
+                  search={{ vehicle: `${vehicle.year} ${vehicle.brand} ${vehicle.model}` }}
+                >
                   <MessageCircle /> Send an inquiry
                 </Link>
               </Button>
@@ -238,7 +246,12 @@ function VehicleDetail() {
               options.
             </p>
             <Button asChild className="mt-6" size="lg" variant="automotive">
-              <Link to="/request-vehicle">Send a vehicle brief</Link>
+              <Link
+                to="/request-vehicle"
+                search={{ vehicle: `${vehicle.year} ${vehicle.brand} ${vehicle.model}` }}
+              >
+                Send a vehicle brief
+              </Link>
             </Button>
           </div>
         </div>
