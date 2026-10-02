@@ -12,15 +12,46 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getVehicleFallbackImage, vehicles } from "@/lib/inventory";
-import { getFavoriteSlugs, toggleFavorite } from "@/lib/vehicle-platform";
+import { getFavoriteSlugs, publicVehicleBySlug, toggleFavorite } from "@/lib/vehicle-platform";
 import { whatsappUrl } from "@/components/site-shell";
 
 export const Route = createFileRoute("/cars/$slug")({
-  loader: ({ params }) => {
-    const vehicle = vehicles.find((item) => item.slug === params.slug);
+  loader: async ({ params }) => {
+    let vehicle = null;
+    try {
+      vehicle = await publicVehicleBySlug(params.slug);
+    } catch (error) {
+      if (!import.meta.env.DEV) throw error;
+      vehicle = vehicles.find((item) => item.slug === params.slug) ?? null;
+    }
     if (!vehicle) throw notFound();
     return vehicle;
   },
+  errorComponent: ({ error }) => (
+    <section className="section-pad bg-secondary">
+      <div className="container-shell">
+        <div className="border border-destructive/40 bg-background p-8 text-center">
+          <p className="text-xs font-bold uppercase text-primary">Vehicle lookup</p>
+          <h1 className="mt-3 text-3xl font-extrabold uppercase">Vehicle details unavailable</h1>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            This vehicle could not be loaded from the live catalog. Please return to the marketplace
+            or send a sourcing request.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button asChild variant="outline">
+              <Link to="/cars">Back to cars</Link>
+            </Button>
+            <Button asChild variant="automotive">
+              <Link to="/request-vehicle">Request a vehicle</Link>
+            </Button>
+          </div>
+          {import.meta.env.DEV && error instanceof Error && (
+            <p className="mt-5 text-xs text-muted-foreground">Development error: {error.message}</p>
+          )}
+        </div>
+      </div>
+    </section>
+  ),
   head: ({ loaderData }) => {
     const vehicle = loaderData;
     const title = vehicle
