@@ -246,9 +246,7 @@ export function PartsCard({ part }: { part: Part }) {
             </Link>
           </Button>
           <Button asChild variant="automotive">
-            <a href={whatsappUrl(`Hello AWA AUTO MALL, I would like to request the ${part.name}.`)}>
-              Request Part
-            </a>
+            <Link to="/request-vehicle">Request Part</Link>
           </Button>
         </div>
       </div>

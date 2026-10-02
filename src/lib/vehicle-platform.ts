@@ -348,11 +348,52 @@ export function adminBulk(resource: string, payload: Record<string, unknown>) {
   });
 }
 
-export function submitInquiry(payload: Record<string, unknown>) {
-  return apiRequest<{ ok: true; id: number }>("/inquiries", {
+export async function submitInquiry(payload: Record<string, unknown>) {
+  if (!API_BASE_URL) throw new Error("Live inquiry service is not configured.");
+  const response = await fetch(apiUrl("/inquiries"), {
     method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(8000),
   });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.ok === false) {
+    throw new Error(
+      typeof data?.error === "string" ? data.error : `Inquiry request failed: ${response.status}`,
+    );
+  }
+  return data as { ok: true; id: number };
+}
+
+export async function adminUploadFiles(files: File[], folder: string, entityId?: number) {
+  if (!API_BASE_URL || !isAdminApiEnabled()) throw new Error("API mode is off.");
+  const form = new FormData();
+  files.forEach((file) => form.append("files[]", file));
+  form.append("folder", folder);
+  if (entityId) {
+    form.append("entity_type", "vehicle");
+    form.append("entity_id", String(entityId));
+  }
+  const headers = new Headers({ Accept: "application/json" });
+  const token = typeof window !== "undefined" ? window.localStorage.getItem(ADMIN_TOKEN_KEY) : null;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  else if (ADMIN_API_KEY) headers.set("X-Admin-Key", ADMIN_API_KEY);
+  const response = await fetch(apiUrl("/admin/uploads"), {
+    method: "POST",
+    headers,
+    body: form,
+    signal: AbortSignal.timeout(30000),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(
+      typeof payload?.error === "string" ? payload.error : `Upload failed: ${response.status}`,
+    );
+  }
+  return payload as {
+    ok: true;
+    data: Array<{ url: string; name: string; mime_type: string; file_size: number }>;
+  };
 }
 
 const FAVORITES_KEY = "awa-favorite-vehicles";

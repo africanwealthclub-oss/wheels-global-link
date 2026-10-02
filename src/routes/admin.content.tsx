@@ -15,7 +15,7 @@ import {
 } from "@/lib/vehicle-platform";
 
 export const Route = createFileRoute("/admin/content")({
-  head: () => ({ meta: [{ title: "Content | AWA Admin" }] }),
+  head: () => ({ meta: [{ title: "Blog / Articles | AWA Admin" }] }),
   component: ContentAdminPage,
 });
 type Article = {
@@ -168,11 +168,11 @@ function ContentAdminPage() {
     }
   };
   return (
-    <AdminModuleShell title="Content studio" eyebrow="Publishing">
+    <AdminModuleShell title="Blog / Articles" eyebrow="News publishing">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-slate-500">
-            Write, edit, publish, and remove news articles without popups.
+            Create, edit, publish, and remove blog articles and News posts.
           </p>
           <p className="mt-1 text-xs font-semibold text-slate-400">
             {loading ? "Syncing…" : live ? "Live API data" : "API unavailable"}
@@ -206,7 +206,7 @@ function ContentAdminPage() {
                 {editingId ? "Edit article" : "New article"}
               </p>
               <h2 className="mt-1 text-2xl font-extrabold">
-                {editingId ? "Update news article" : "Create news article"}
+                {editingId ? "Update blog article" : "Create blog article"}
               </h2>
             </div>
             <Button type="button" variant="ghost" size="icon" onClick={closeForm}>

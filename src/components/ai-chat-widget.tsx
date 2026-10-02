@@ -50,7 +50,7 @@ const carsActions: ChatAction[] = [
 ];
 const contactActions: ChatAction[] = [
   { label: "Contact team", href: "/contact" },
-  { label: "WhatsApp", href: "https://wa.me/971586106612" },
+  { label: "Send an inquiry", href: "/request-vehicle" },
 ];
 
 function replyFor(question: string): AssistantReply {

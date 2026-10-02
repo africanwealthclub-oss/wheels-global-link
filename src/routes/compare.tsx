@@ -18,7 +18,6 @@ import {
   comparisonGroups,
   getComparisonHighlights,
 } from "@/lib/vehicle-comparison";
-import { whatsappUrl } from "@/components/site-shell";
 import image from "@/assets/awa-cars-category.jpg";
 
 export const Route = createFileRoute("/compare")({
@@ -71,9 +70,9 @@ function ComparePage() {
                   copy="Use this view to compare specifications, ask better questions, and decide which vehicles deserve a quote."
                 />
                 <Button asChild size="lg" variant="automotive">
-                  <a href={whatsappUrl(buildQuoteMessage(selected))}>
+                  <Link to="/request-vehicle">
                     <MessageCircle /> Request quote for selected
-                  </a>
+                  </Link>
                 </Button>
               </div>
               <div className="mb-10 grid gap-4 md:grid-cols-3">
@@ -138,13 +137,7 @@ function ComparePage() {
                           </Link>
                         </Button>
                         <Button asChild variant="outline" size="sm">
-                          <a
-                            href={whatsappUrl(
-                              `Hello AWA AUTO MALL, I would like a quote for the ${vehicle.year} ${vehicle.brand} ${vehicle.model}.`,
-                            )}
-                          >
-                            Ask about this car
-                          </a>
+                          <Link to="/request-vehicle">Ask about this car</Link>
                         </Button>
                       </div>
                     </div>
@@ -167,9 +160,9 @@ function ComparePage() {
                     </p>
                   </div>
                   <Button asChild size="lg" variant="automotive">
-                    <a href={whatsappUrl(buildQuoteMessage(selected))}>
+                    <Link to="/request-vehicle">
                       Request selected quote <ArrowRight />
-                    </a>
+                    </Link>
                   </Button>
                 </div>
               </section>

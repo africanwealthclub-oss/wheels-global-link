@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageIntro, SectionHeading } from "@/components/marketplace";
-import { API_BASE_URL, checkApiReady, submitInquiry } from "@/lib/vehicle-platform";
-import { whatsappUrl } from "@/components/site-shell";
+import { API_BASE_URL, submitInquiry } from "@/lib/vehicle-platform";
 import image from "@/assets/awa-global.jpg";
 export const Route = createFileRoute("/request-vehicle")({
   head: () => ({ meta: [{ title: "Request a Vehicle | AWA AUTO MALL" }] }),
@@ -20,8 +19,7 @@ function RequestVehiclePage() {
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     try {
-      const apiReady = await checkApiReady();
-      if (API_BASE_URL && apiReady) {
+      if (API_BASE_URL) {
         await submitInquiry({
           ...payload,
           customer_name: payload.name,
@@ -31,13 +29,11 @@ function RequestVehiclePage() {
         });
         setStatus("Your request has been sent. Our team will review it and contact you shortly.");
       } else {
-        setStatus(
-          "The request service is unavailable. Please continue on WhatsApp so our team can help.",
-        );
+        setStatus("The request service is unavailable. Please try again later.");
       }
       (event.target as HTMLFormElement).reset();
     } catch {
-      setStatus("We could not reach the request service. Please continue on WhatsApp.");
+      setStatus("We could not reach the request service. Please try again later.");
     }
   }
   return (
@@ -125,11 +121,6 @@ function RequestVehiclePage() {
             <div className="flex flex-wrap gap-3 sm:col-span-2">
               <Button type="submit" size="lg" variant="automotive">
                 Submit sourcing request <ArrowRight />
-              </Button>
-              <Button asChild type="button" variant="outline" size="lg">
-                <a href={whatsappUrl("I would like help sourcing a vehicle.")}>
-                  Continue on WhatsApp
-                </a>
               </Button>
             </div>
           </form>

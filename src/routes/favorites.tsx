@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { PageIntro, SectionHeading } from "@/components/marketplace";
 import { vehicles } from "@/lib/inventory";
 import { getFavoriteSlugs, setFavoriteSlugs } from "@/lib/vehicle-platform";
-import { whatsappUrl } from "@/components/site-shell";
 import image from "@/assets/awa-cars-category.jpg";
 export const Route = createFileRoute("/favorites")({
   head: () => ({ meta: [{ title: "Saved Vehicles | AWA AUTO MALL" }] }),
@@ -90,13 +89,9 @@ function FavoritesPage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                         <Button asChild variant="automotive" size="icon" aria-label="Request quote">
-                          <a
-                            href={whatsappUrl(
-                              `Quote request: ${vehicle.year} ${vehicle.brand} ${vehicle.model}`,
-                            )}
-                          >
+                          <Link to="/request-vehicle">
                             <MessageCircle className="h-4 w-4" />
-                          </a>
+                          </Link>
                         </Button>
                       </div>
                     </div>

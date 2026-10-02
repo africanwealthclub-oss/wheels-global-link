@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Edit3, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { adminCreate, adminDelete, adminList, adminUpdate } from "@/lib/vehicle-platform";
+import {
+  adminCreate,
+  adminDelete,
+  adminList,
+  adminUpdate,
+  adminUploadFiles,
+} from "@/lib/vehicle-platform";
 
 export const Route = createFileRoute("/admin/vehicles")({
   head: () => ({ meta: [{ title: "Vehicles | AWA Admin" }] }),
@@ -62,6 +68,7 @@ function VehicleAdminPage() {
   const [connected, setConnected] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const load = async () => {
     setLoading(true);
     try {
@@ -90,6 +97,7 @@ function VehicleAdminPage() {
   const startCreate = () => {
     setEditingId(null);
     setForm({ ...emptyForm });
+    setImageFiles([]);
     setMessage("");
   };
   const startEdit = (vehicle: Vehicle) => {
@@ -101,12 +109,14 @@ function VehicleAdminPage() {
       is_published: Boolean(vehicle.is_published),
       featured: Boolean(vehicle.featured),
     });
+    setImageFiles([]);
     setMessage("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const closeForm = () => {
     setForm(null);
     setEditingId(null);
+    setImageFiles([]);
   };
   const update = (key: string, value: string | boolean) =>
     setForm((current) => (current ? { ...current, [key]: value } : current));
@@ -127,8 +137,17 @@ function VehicleAdminPage() {
       slug: `${form.brand}-${form.model}-${form.year}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     };
     try {
-      if (editingId) await adminUpdate("vehicles", editingId, payload);
-      else await adminCreate("vehicles", payload);
+      const result = editingId
+        ? await adminUpdate("vehicles", editingId, payload).then(() => ({ id: editingId }))
+        : await adminCreate("vehicles", payload);
+      if (imageFiles.length) {
+        const uploaded = await adminUploadFiles(imageFiles, "vehicles", result.id);
+        const urls = uploaded.data.map((file) => file.url);
+        await adminUpdate("vehicles", result.id, {
+          image: urls[0] ?? "",
+          images_json: JSON.stringify(urls),
+        });
+      }
       closeForm();
       await load();
     } catch (error) {
@@ -223,6 +242,27 @@ function VehicleAdminPage() {
             {field("mileage", "Mileage")}
             {field("image", "Image URL")}
           </div>
+          <label className="mt-4 block">
+            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">
+              Vehicle images
+            </span>
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setImageFiles(Array.from(event.target.files ?? []))
+              }
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              Select multiple JPG, PNG, or WebP images. Maximum 12 MB per image.
+            </span>
+            {imageFiles.length > 0 && (
+              <span className="mt-2 block text-xs font-semibold text-primary">
+                {imageFiles.length} image{imageFiles.length === 1 ? "" : "s"} ready to upload
+              </span>
+            )}
+          </label>
           <label className="mt-4 block">
             <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">
               Description
