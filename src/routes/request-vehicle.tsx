@@ -22,11 +22,14 @@ function RequestVehiclePage() {
     try {
       const apiReady = await checkApiReady();
       if (API_BASE_URL && apiReady) {
-        await apiRequest("/vehicle-requests", { method: "POST", body: JSON.stringify(payload) });
+        await apiRequest("/vehicle-requests", {
+          method: "POST",
+          body: JSON.stringify({ ...payload, source: "vehicle-request", type: "sourcing" }),
+        });
         setStatus("Your request has been sent. Our team will review it and contact you shortly.");
       } else {
         setStatus(
-          "Development preview: your brief was validated locally. Connect a healthy PHP API to submit it automatically.",
+          "The request service is unavailable. Please continue on WhatsApp so our team can help.",
         );
       }
       (event.target as HTMLFormElement).reset();
