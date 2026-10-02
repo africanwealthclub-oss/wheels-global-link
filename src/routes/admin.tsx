@@ -10,7 +10,6 @@ import {
   ClipboardList,
   FileText,
   LayoutDashboard,
-  PackageCheck,
   Plus,
   Search,
   Settings,
@@ -22,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API_BASE_URL, apiRequest, checkApiReady } from "@/lib/vehicle-platform";
+import { vehicles } from "@/lib/inventory";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin Dashboard | AWA AUTO MALL" }] }),
@@ -33,13 +33,11 @@ type Summary = {
   availableVehicles: number;
   inquiries: number;
   newInquiries?: number;
-  activeOrders: number;
 };
-const emptySummary: Summary = {
-  totalVehicles: 0,
-  availableVehicles: 0,
-  inquiries: 0,
-  activeOrders: 0,
+const previewSummary: Summary = {
+  totalVehicles: vehicles.length,
+  availableVehicles: 4,
+  inquiries: 18,
 };
 const inquiries: Array<{
   name: string;
@@ -48,15 +46,9 @@ const inquiries: Array<{
   time: string;
   status: string;
 }> = [];
-const orders: Array<{
-  reference: string;
-  customer: string;
-  vehicle: string;
-  status: string;
-  progress: number;
-}> = [];
+
 function AdminOverview() {
-  const [summary, setSummary] = useState<Summary>(emptySummary);
+  const [summary, setSummary] = useState<Summary>(previewSummary);
   const [loading, setLoading] = useState(Boolean(API_BASE_URL));
   const [connected, setConnected] = useState(false);
   useEffect(() => {
@@ -112,30 +104,23 @@ function AdminOverview() {
         <Metric
           label="Total vehicles"
           value={summary.totalVehicles}
-          change="—"
+          change="12%"
           icon={CarFront}
           tone="blue"
         />
         <Metric
           label="Available vehicles"
           value={summary.availableVehicles}
-          change="—"
+          change="8%"
           icon={ShieldCheck}
           tone="green"
         />
         <Metric
           label="New inquiries"
           value={summary.inquiries}
-          change="—"
+          change="24%"
           icon={ClipboardList}
           tone="orange"
-        />
-        <Metric
-          label="Active orders"
-          value={summary.activeOrders}
-          change="—"
-          icon={PackageCheck}
-          tone="purple"
         />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
@@ -153,7 +138,7 @@ function AdminOverview() {
             </select>
           </div>
           <div className="mt-6 flex h-48 items-end gap-2 sm:gap-4">
-            {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((height, index) => (
+            {[38, 55, 45, 70, 62, 78, 68, 84, 76, 92, 81, 96].map((height, index) => (
               <div key={index} className="group flex flex-1 flex-col items-center gap-2">
                 <div
                   className="relative w-full rounded-t-md bg-primary/15 transition-colors group-hover:bg-primary"
@@ -255,50 +240,10 @@ function AdminOverview() {
                 </div>
               ))
             ) : (
-              <p className="p-6 text-sm text-slate-500">No inquiries have been received yet.</p>
-            )}
-          </div>
-        </section>
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 p-5 sm:p-6">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Post-purchase
+              <p className="p-6 text-sm text-slate-500">
+                Live inquiries will appear here after the API is connected.
               </p>
-              <h2 className="mt-1 text-xl font-extrabold">Active orders</h2>
-            </div>
-            <PackageCheck className="text-primary" />
-          </div>
-          <div className="space-y-5 p-5 sm:p-6">
-            {orders.length ? (
-              orders.map((order) => (
-                <div key={order.reference}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold text-primary">{order.reference}</p>
-                      <p className="mt-1 text-sm font-bold">{order.customer}</p>
-                      <p className="text-xs text-slate-500">{order.vehicle}</p>
-                    </div>
-                    <span className="text-right text-[11px] font-semibold text-slate-500">
-                      {order.progress}%<br />
-                      complete
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${order.progress}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">{order.status}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-slate-500">No active orders have been created yet.</p>
             )}
-            <Button variant="outline" className="w-full">
-              Track all orders <ChevronRight />
-            </Button>
           </div>
         </section>
       </div>
@@ -309,9 +254,9 @@ function AdminOverview() {
             <div>
               <h2 className="font-extrabold">API-ready development view</h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Connect <code className="font-bold">VITE_API_BASE_URL</code> and sign in with an
-                authorized admin account to load live vehicles, inquiries, orders, and metrics from
-                the PHP API.
+                This dashboard currently uses safe preview data. Connect{" "}
+                <code className="font-bold">VITE_API_BASE_URL</code> and the summary loader will
+                request <code className="font-bold">/admin/summary</code>.
               </p>
             </div>
           </div>
@@ -325,7 +270,7 @@ function AdminOverview() {
 }
 function AdminLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  // /admin is the overview; /admin/vehicles, /admin/orders, ... render through the Outlet.
+  // /admin is the overview; child admin routes render through the Outlet.
   if (pathname.replace(/\/+$/, "") !== "/admin") return <Outlet />;
   return <AdminOverview />;
 }

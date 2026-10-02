@@ -11,7 +11,6 @@ import {
   LogIn,
   LogOut,
   MoreHorizontal,
-  PackageCheck,
   Search,
   Settings,
   Wifi,
@@ -25,8 +24,7 @@ const navItems: NavItem[] = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Vehicles", href: "/admin/vehicles", icon: CarFront },
   { label: "Inquiries", href: "/admin/inquiries", icon: ClipboardList },
-  { label: "Orders", href: "/admin/orders", icon: PackageCheck },
-  { label: "Blog / Articles", href: "/admin/content", icon: FileText },
+  { label: "Content", href: "/admin/content", icon: FileText },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
@@ -47,7 +45,7 @@ export function AdminModuleShell({
   const [checkingSession, setCheckingSession] = useState(true);
   useEffect(() => {
     let active = true;
-    const hasSession = Boolean(window.localStorage.getItem(TOKEN_KEY));
+    const hasSession = Boolean(window.localStorage.getItem(TOKEN_KEY)) || false;
     if (hasSession) {
       setAuthenticated(true);
       setCheckingSession(false);
@@ -106,7 +104,9 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
       return;
     }
     if (!API_BASE_URL || !apiAvailable) {
-      setError("The live API is not connected. Configure VITE_API_BASE_URL and try again.");
+      setError(
+        "The live API is not connected. Configure VITE_API_BASE_URL and use an authorized admin account.",
+      );
       return;
     }
     setBusy(true);
@@ -137,7 +137,7 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
             Admin sign in
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Sign in to manage vehicles, inquiries, orders, and content.
+            Sign in to manage vehicles, inquiries, and content.
           </p>
         </div>
         <form className="space-y-4" onSubmit={submit}>
@@ -183,7 +183,7 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: () => void }) {
         <p className="mt-4 text-center text-xs leading-5 text-slate-400">
           {apiAvailable
             ? "Live API detected. Use your configured admin credentials."
-            : "API is not connected. Contact the system administrator to configure the admin API."}
+            : "API is not connected. Configure the API and sign in with an authorized admin account."}
         </p>
       </section>
     </main>
@@ -286,8 +286,8 @@ function AdminWorkspace({
           <div className="mx-auto max-w-[1440px]">
             <div className="mb-6 hidden grid-cols-4 gap-3 lg:grid">
               <Pulse label="Workspace status" value="Ready" icon={Activity} tone="green" />
-              <Pulse label="Today's activity" value="—" icon={Bell} tone="blue" />
-              <Pulse label="Needs attention" value="—" icon={ClipboardList} tone="orange" />
+              <Pulse label="Today's activity" value="24 updates" icon={Bell} tone="blue" />
+              <Pulse label="Needs attention" value="8 items" icon={ClipboardList} tone="orange" />
               <Pulse
                 label="Data source"
                 value={API_BASE_URL ? "Live API" : "Unavailable"}
@@ -311,7 +311,7 @@ function AdminWorkspace({
                 <div className="rounded-xl bg-white p-4">
                   <p className="text-sm font-bold">Confirm the source</p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Live inventory appears after the PHP API health check succeeds.
+                    Demo inventory remains active until the PHP API health check succeeds.
                   </p>
                 </div>
                 <div className="rounded-xl bg-white p-4">
@@ -409,12 +409,12 @@ function SourceCard({ className = "", light = false }: { className?: string; lig
         className={`flex items-center gap-2 text-xs font-bold uppercase ${light ? "text-emerald-600" : "text-emerald-300"}`}
       >
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        {API_BASE_URL ? "API configured · live data only" : "API unavailable"}
+        {API_BASE_URL ? "API configured · live data" : "API unavailable"}
       </p>
       <p
         className={`mt-2 break-words text-xs leading-5 ${light ? "text-slate-500" : "text-white/50"}`}
       >
-        {API_BASE_URL || "Connect the API to load live workspace data."}
+        {API_BASE_URL || "Connect the PHP API to load live workspace data."}
       </p>
     </div>
   );
