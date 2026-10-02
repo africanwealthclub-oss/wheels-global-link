@@ -398,8 +398,6 @@ export async function adminUploadFiles(files: File[], folder: string, entityId?:
 
 const FAVORITES_KEY = "awa-favorite-vehicles";
 
-const FAVORITES_KEY = "awa-favorite-vehicles";
-
 export function getFavoriteSlugs(): string[] {
   if (typeof window === "undefined") return [];
   try {
