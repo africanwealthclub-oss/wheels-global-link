@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageIntro, SectionHeading } from "@/components/marketplace";
-import { apiRequest, API_BASE_URL, checkApiReady } from "@/lib/vehicle-platform";
+import { API_BASE_URL, checkApiReady, submitInquiry } from "@/lib/vehicle-platform";
 import { whatsappUrl } from "@/components/site-shell";
 import image from "@/assets/awa-global.jpg";
 export const Route = createFileRoute("/request-vehicle")({
@@ -22,9 +22,12 @@ function RequestVehiclePage() {
     try {
       const apiReady = await checkApiReady();
       if (API_BASE_URL && apiReady) {
-        await apiRequest("/vehicle-requests", {
-          method: "POST",
-          body: JSON.stringify({ ...payload, source: "vehicle-request", type: "sourcing" }),
+        await submitInquiry({
+          ...payload,
+          customer_name: payload.name,
+          source: "vehicle-request",
+          type: "vehicle_request",
+          request_text: `${payload.brand || "Vehicle"} ${payload.model || "sourcing request"}; year: ${payload.year || "any"}; condition: ${payload.condition || "any"}; budget: ${payload.budget || "not specified"}; destination: ${payload.market || "not specified"}; quantity: ${payload.quantity || "1"}; requirements: ${payload.requirements || "none"}`,
         });
         setStatus("Your request has been sent. Our team will review it and contact you shortly.");
       } else {

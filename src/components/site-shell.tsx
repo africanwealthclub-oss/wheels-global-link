@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CarFront, Heart, Home, Menu, MessageCircle, Phone, X } from "lucide-react";
+import { CarFront, Heart, Home, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/awa-logo.png";
@@ -169,11 +169,17 @@ export function WhatsAppFloat() {
 }
 export function ContactStrip() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {[
         [Phone, "China phone", "+86 130 2689 5234", "tel:+8613026895234"],
         [Phone, "Ghana phone", "+233 592 656 665", "tel:+233592656665"],
         [MessageCircle, "WhatsApp", "+971 58 610 6612", whatsappUrl()],
+        [
+          MapPin,
+          "Location",
+          "Guangzhou, China",
+          "https://www.google.com/maps/search/?api=1&query=Guangzhou%2C%20China",
+        ],
         [
           MessageCircle,
           "TikTok",
