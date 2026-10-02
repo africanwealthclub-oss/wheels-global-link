@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { trackAnalytics } from "../lib/vehicle-platform";
 import { CompareProvider, CompareTray } from "../components/marketplace";
 import { AIChatWidget } from "../components/ai-chat-widget";
 import { MobileAppNav, SiteFooter, SiteHeader, WhatsAppFloat } from "../components/site-shell";
@@ -118,9 +119,11 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isAdmin = useRouterState({
-    select: (state) => state.location.pathname.startsWith("/admin"),
-  });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isAdmin = pathname.startsWith("/admin");
+  useEffect(() => {
+    if (!isAdmin) trackAnalytics("page_view", undefined, undefined, { path: pathname });
+  }, [isAdmin, pathname]);
   return (
     <QueryClientProvider client={queryClient}>
       <CompareProvider>

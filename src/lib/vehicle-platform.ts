@@ -101,6 +101,41 @@ function mapApiVehicle(item: ApiVehicle): Vehicle {
   };
 }
 
+const ANALYTICS_SESSION_KEY = "awa-analytics-session";
+
+function analyticsSessionId(): string {
+  if (typeof window === "undefined") return "server";
+  const existing = window.localStorage.getItem(ANALYTICS_SESSION_KEY);
+  if (existing) return existing;
+  const value =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(ANALYTICS_SESSION_KEY, value);
+  return value;
+}
+
+export function trackAnalytics(
+  eventName: string,
+  entityType?: string,
+  entityId?: number,
+  metadata: Record<string, unknown> = {},
+): void {
+  if (!API_BASE_URL || typeof window === "undefined") return;
+  void fetch(apiUrl("/analytics"), {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    keepalive: true,
+    body: JSON.stringify({
+      event_name: eventName,
+      entity_type: entityType,
+      entity_id: entityId,
+      session_id: analyticsSessionId(),
+      metadata,
+    }),
+  }).catch(() => undefined);
+}
+
 export async function checkApiReady(): Promise<boolean> {
   if (!API_BASE_URL || !isAdminApiEnabled()) return false;
   try {
