@@ -202,19 +202,43 @@ export async function adminLogout(): Promise<void> {
 
 export async function publicVehicles(): Promise<Vehicle[]> {
   if (!API_BASE_URL) throw new Error("Live API is not configured.");
-  const response = await fetch(apiUrl("/catalog?type=vehicle&per_page=100"), {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(6000),
-  });
-  const payload = (await response.json().catch(() => ({}))) as Partial<ApiList<ApiVehicle>>;
-  if (!response.ok || payload?.ok === false || !Array.isArray(payload?.data)) {
-    throw new Error(
-      typeof payload?.error === "string"
-        ? payload.error
-        : `Catalog request failed: ${response.status}`,
-    );
+  const perPage = 100;
+
+  async function fetchPage(page: number): Promise<ApiList<ApiVehicle>> {
+    const params = new URLSearchParams({
+      type: "vehicle",
+      per_page: String(perPage),
+      page: String(page),
+    });
+    const response = await fetch(apiUrl(`/catalog?${params.toString()}`), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+    const payload = (await response.json().catch(() => ({}))) as Partial<ApiList<ApiVehicle>>;
+    if (!response.ok || payload?.ok === false || !Array.isArray(payload?.data)) {
+      throw new Error(
+        typeof payload?.error === "string"
+          ? payload.error
+          : `Catalog request failed: ${response.status}`,
+      );
+    }
+    return payload as ApiList<ApiVehicle>;
   }
-  return payload.data.map(mapApiVehicle).filter((item) => item.slug && item.brand && item.model);
+
+  const firstPage = await fetchPage(1);
+  const totalPages = Math.max(
+    1,
+    Number(
+      firstPage.meta?.pages ??
+        Math.ceil(Number(firstPage.meta?.total ?? firstPage.data.length) / perPage),
+    ),
+  );
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => fetchPage(index + 2)),
+  );
+  const allItems = [firstPage, ...remainingPages].flatMap((page) => page.data);
+
+  return allItems.map(mapApiVehicle).filter((item) => item.slug && item.brand && item.model);
 }
 
 export async function publicVehicleBySlug(slug: string): Promise<Vehicle | null> {
