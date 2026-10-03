@@ -439,6 +439,26 @@ export const currencySymbols: Record<string, string> = {
   GBP: "£",
 };
 
+export function formatMarketplacePrice(price: string, currency: string): string {
+  if (!price || /contact|request|on request/i.test(price)) return price;
+
+  const values = price.match(/\d[\d,]*(?:\.\d+)?/g);
+  if (!values?.length) return price;
+
+  // Inventory fallback prices are stored in GHS. Rates are expressed as units
+  // of each currency per USD, so converting GHS uses targetRate / ghsRate.
+  const ghsRate = currencyRates.GHS ?? 1;
+  const targetRate = currencyRates[currency] ?? 1;
+  const symbol = currencySymbols[currency] ?? currency;
+  const converted = values.map((value) => {
+    const amount = Number(value.replace(/,/g, ""));
+    const result = (amount / ghsRate) * targetRate;
+    return result.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  });
+
+  return `${symbol} ${converted.join(" - ")}`;
+}
+
 export function formatIndicativePrice(vehicle: Vehicle, currency: string): string {
   if (!vehicle.price || vehicle.price.toLowerCase().includes("contact")) return "Contact for Price";
   const numeric = Number(vehicle.price.replace(/[^\d.]/g, ""));
