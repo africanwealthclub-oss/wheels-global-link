@@ -202,19 +202,43 @@ export async function adminLogout(): Promise<void> {
 
 export async function publicVehicles(): Promise<Vehicle[]> {
   if (!API_BASE_URL) throw new Error("Live API is not configured.");
-  const response = await fetch(apiUrl("/catalog?type=vehicle&per_page=100"), {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(6000),
-  });
-  const payload = (await response.json().catch(() => ({}))) as Partial<ApiList<ApiVehicle>>;
-  if (!response.ok || payload?.ok === false || !Array.isArray(payload?.data)) {
-    throw new Error(
-      typeof payload?.error === "string"
-        ? payload.error
-        : `Catalog request failed: ${response.status}`,
-    );
+  const perPage = 100;
+
+  async function fetchPage(page: number): Promise<ApiList<ApiVehicle>> {
+    const params = new URLSearchParams({
+      type: "vehicle",
+      per_page: String(perPage),
+      page: String(page),
+    });
+    const response = await fetch(apiUrl(`/catalog?${params.toString()}`), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+    const payload = (await response.json().catch(() => ({}))) as Partial<ApiList<ApiVehicle>>;
+    if (!response.ok || payload?.ok === false || !Array.isArray(payload?.data)) {
+      throw new Error(
+        typeof payload?.error === "string"
+          ? payload.error
+          : `Catalog request failed: ${response.status}`,
+      );
+    }
+    return payload as ApiList<ApiVehicle>;
   }
-  return payload.data.map(mapApiVehicle).filter((item) => item.slug && item.brand && item.model);
+
+  const firstPage = await fetchPage(1);
+  const totalPages = Math.max(
+    1,
+    Number(
+      firstPage.meta?.pages ??
+        Math.ceil(Number(firstPage.meta?.total ?? firstPage.data.length) / perPage),
+    ),
+  );
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => fetchPage(index + 2)),
+  );
+  const allItems = [firstPage, ...remainingPages].flatMap((page) => page.data);
+
+  return allItems.map(mapApiVehicle).filter((item) => item.slug && item.brand && item.model);
 }
 
 export async function publicVehicleBySlug(slug: string): Promise<Vehicle | null> {
@@ -438,6 +462,26 @@ export const currencySymbols: Record<string, string> = {
   CNY: "¥",
   GBP: "£",
 };
+
+export function formatMarketplacePrice(price: string, currency: string): string {
+  if (!price || /contact|request|on request/i.test(price)) return price;
+
+  const values = price.match(/\d[\d,]*(?:\.\d+)?/g);
+  if (!values?.length) return price;
+
+  // Inventory fallback prices are stored in GHS. Rates are expressed as units
+  // of each currency per USD, so converting GHS uses targetRate / ghsRate.
+  const ghsRate = currencyRates.GHS ?? 1;
+  const targetRate = currencyRates[currency] ?? 1;
+  const symbol = currencySymbols[currency] ?? currency;
+  const converted = values.map((value) => {
+    const amount = Number(value.replace(/,/g, ""));
+    const result = (amount / ghsRate) * targetRate;
+    return result.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  });
+
+  return `${symbol} ${converted.join(" - ")}`;
+}
 
 export function formatIndicativePrice(vehicle: Vehicle, currency: string): string {
   if (!vehicle.price || vehicle.price.toLowerCase().includes("contact")) return "Contact for Price";

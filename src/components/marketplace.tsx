@@ -1,18 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Check,
-  Fuel,
-  Gauge,
-  GitCompareArrows,
-  Heart,
-  Settings2,
-  X,
-} from "lucide-react";
+import { ArrowRight, Check, Fuel, Gauge, GitCompareArrows, Settings2, X } from "lucide-react";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { getVehicleFallbackImage, type Part, type Vehicle } from "@/lib/inventory";
-import { getFavoriteSlugs, toggleFavorite, trackAnalytics } from "@/lib/vehicle-platform";
+import { trackAnalytics } from "@/lib/vehicle-platform";
 
 type CompareContextValue = {
   selected: string[];
@@ -90,7 +81,6 @@ export function SectionHeading({
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const { selected, toggle } = useCompare();
   const isSelected = selected.includes(vehicle.slug);
-  const [saved, setSaved] = useState(() => getFavoriteSlugs().includes(vehicle.slug));
   return (
     <article className="group overflow-hidden border border-border bg-card">
       <Link
@@ -136,22 +126,6 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <strong>{vehicle.price}</strong>
-          <button
-            type="button"
-            onClick={() => {
-              const next = toggleFavorite(vehicle.slug);
-              setSaved(next.includes(vehicle.slug));
-              trackAnalytics("favorite", "vehicle", undefined, {
-                slug: vehicle.slug,
-                saved: next.includes(vehicle.slug),
-              });
-            }}
-            className="inline-flex items-center gap-1 text-xs font-bold uppercase text-primary"
-            aria-pressed={saved}
-          >
-            <Heart className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
-            {saved ? "Saved" : "Save"}
-          </button>
         </div>
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           <Button asChild variant="outline">

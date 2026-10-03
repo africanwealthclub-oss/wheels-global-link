@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CarFront, Heart, Home, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
+import { CarFront, Home, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/awa-logo.png";
@@ -7,7 +7,6 @@ import logo from "@/assets/awa-logo.png";
 const nav = [
   { to: "/", label: "Home" },
   { to: "/cars", label: "Cars" },
-  { to: "/favorites", label: "Saved" },
   { to: "/request-vehicle", label: "Request a Vehicle" },
   { to: "/news", label: "News" },
   { to: "/about", label: "About Us" },
@@ -91,7 +90,6 @@ export function MobileAppNav() {
   const items = [
     { to: "/", label: "Home", icon: Home },
     { to: "/cars", label: "Cars", icon: CarFront },
-    { to: "/favorites", label: "Saved", icon: Heart },
     { to: "/request-vehicle", label: "Request", icon: MessageCircle },
     { to: "/contact", label: "Contact", icon: Phone },
   ];

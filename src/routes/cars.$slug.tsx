@@ -9,10 +9,15 @@ import {
   ShieldCheck,
   Ship,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getVehicleFallbackImage, vehicles } from "@/lib/inventory";
-import { getFavoriteSlugs, publicVehicleBySlug, toggleFavorite } from "@/lib/vehicle-platform";
+import {
+  formatMarketplacePrice,
+  getFavoriteSlugs,
+  publicVehicleBySlug,
+  toggleFavorite,
+} from "@/lib/vehicle-platform";
 
 export const Route = createFileRoute("/cars/$slug")({
   loader: async ({ params }) => {
@@ -79,6 +84,11 @@ function VehicleDetail() {
   const gallery = vehicle.images?.length ? vehicle.images : [vehicle.image];
   const [activeImage, setActiveImage] = useState(gallery[0]);
   const [saved, setSaved] = useState(() => getFavoriteSlugs().includes(vehicle.slug));
+  const [currency, setCurrency] = useState("USD");
+  useEffect(() => {
+    const storedCurrency = localStorage.getItem("awa-currency");
+    if (storedCurrency) setCurrency(storedCurrency);
+  }, []);
   const specs = [
     ["Brand", vehicle.brand],
     ["Model", vehicle.model],
@@ -155,7 +165,9 @@ function VehicleDetail() {
             </h1>
             <div className="mt-6 border-y border-border py-5">
               <p className="text-xs font-bold uppercase text-muted-foreground">Price</p>
-              <p className="mt-1 text-2xl font-bold">{vehicle.price}</p>
+              <p className="mt-1 text-2xl font-bold">
+                {formatMarketplacePrice(vehicle.price, currency)}
+              </p>
             </div>
             <p className="mt-6 leading-7 text-muted-foreground">{vehicle.description}</p>
             <div className="mt-6 flex items-start gap-3 border-y border-border py-4 text-sm">
