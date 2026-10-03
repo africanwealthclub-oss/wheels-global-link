@@ -9,7 +9,7 @@ Premium automotive marketplace frontend for **AWA AUTO MALL**, a Guangzhou-based
 
 ## What is included
 
-The current application includes a responsive car marketplace, vehicle detail pages, search and filters, saved vehicles, comparison, sourcing requests, WhatsApp contact paths, order tracking, multi-currency display, shipping information, news, PWA installation support, an admin dashboard, analytics, and a guided AWA Assistant widget.
+The current application includes a responsive car marketplace, vehicle detail pages, search and filters, comparison, sourcing requests, WhatsApp contact paths, order tracking, multi-currency display, shipping information, news, PWA installation support, an admin dashboard, analytics, and a guided AWA Assistant widget.
 
 Spare-parts screens and backend support are retained for the planned follow-on phase. The launch scope should remain the car marketplace unless the business explicitly approves activating spare-parts inventory.
 
@@ -55,7 +55,7 @@ The frontend calls the separately deployed API through `VITE_API_BASE_URL`.
 | GET    | `/news`                       | Published news list                                |
 | GET    | `/news/{slug}`                | Published news article                             |
 | POST   | `/inquiries`                  | Vehicle and customer inquiry submission            |
-| POST   | `/analytics`                  | Public page, favorite, compare, and inquiry events |
+| POST   | `/analytics`                  | Public page, compare, and inquiry events           |
 | GET    | `/orders/track/{orderNumber}` | Protected order tracking lookup                    |
 | POST   | `/admin/auth/login`           | Admin JWT login                                    |
 
@@ -67,7 +67,6 @@ The request-vehicle form uses `POST /inquiries` with `type: "vehicle_request"`. 
 - `/cars` — vehicle marketplace
 - `/cars/{slug}` — vehicle detail
 - `/compare` — side-by-side vehicle comparison
-- `/favorites` — saved vehicles
 - `/request-vehicle` — sourcing request form
 - `/shipping` — shipping and export information
 - `/track-order` — order tracking
@@ -87,7 +86,7 @@ The request-vehicle form uses `POST /inquiries` with `type: "vehicle_request"`. 
 
 ## Timeline status
 
-The majority of the original six-week feature scope is implemented in code. The remaining launch work is production deployment, real inventory/content loading, live API contract testing, mail/cron verification, mobile performance QA, canonical-domain cleanup, and owner sign-off. The implementation summary is documented in `docs/timeline-implementation.md`.
+The original six-week frontend scope is implemented in code. The marketplace now consumes the complete live vehicle catalog, including records with incomplete source fields, and the admin content editor supports cover-image uploads and previews. Remaining launch work is production smoke testing, mail/cron verification, mobile performance QA, canonical-domain cleanup, and owner sign-off. The implementation summary is documented in `docs/timeline-implementation.md`.
 
 ## Quality checks
 
