@@ -20,8 +20,7 @@ import { AdminModuleShell } from "@/components/admin-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { API_BASE_URL, apiRequest, checkApiReady } from "@/lib/vehicle-platform";
-import { vehicles } from "@/lib/inventory";
+import { API_BASE_URL, adminList, apiRequest, checkApiReady } from "@/lib/vehicle-platform";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin Dashboard | AWA AUTO MALL" }] }),
@@ -34,21 +33,23 @@ type Summary = {
   inquiries: number;
   newInquiries?: number;
 };
-const previewSummary: Summary = {
-  totalVehicles: vehicles.length,
-  availableVehicles: 4,
-  inquiries: 18,
+type RecentInquiry = {
+  id?: number;
+  customer_name: string;
+  type?: string;
+  request_text?: string;
+  status?: string;
+  created_at?: string;
 };
-const inquiries: Array<{
-  name: string;
-  type: string;
-  vehicle: string;
-  time: string;
-  status: string;
-}> = [];
+const emptySummary: Summary = {
+  totalVehicles: 0,
+  availableVehicles: 0,
+  inquiries: 0,
+};
 
 function AdminOverview() {
-  const [summary, setSummary] = useState<Summary>(previewSummary);
+  const [summary, setSummary] = useState<Summary>(emptySummary);
+  const [inquiries, setInquiries] = useState<RecentInquiry[]>([]);
   const [loading, setLoading] = useState(Boolean(API_BASE_URL));
   const [connected, setConnected] = useState(false);
   useEffect(() => {
@@ -60,13 +61,17 @@ function AdminOverview() {
       .then((ready) => {
         setConnected(ready);
         if (!ready) return;
-        return apiRequest<{ ok: true; data: Summary }>("/admin/summary")
-          .then((payload) =>
+        return Promise.all([
+          apiRequest<{ ok: true; data: Summary }>("/admin/summary"),
+          adminList<RecentInquiry>("inquiries", "?per_page=5&page=1"),
+        ])
+          .then(([summaryPayload, inquiryPayload]) => {
             setSummary({
-              ...payload.data,
-              inquiries: payload.data.newInquiries ?? payload.data.inquiries ?? 0,
-            }),
-          )
+              ...summaryPayload.data,
+              inquiries: summaryPayload.data.newInquiries ?? summaryPayload.data.inquiries ?? 0,
+            });
+            setInquiries(inquiryPayload.data.slice(0, 5));
+          })
           .catch(() => setConnected(false));
       })
       .finally(() => setLoading(false));
@@ -77,7 +82,7 @@ function AdminOverview() {
         <div>
           <div className="flex items-center gap-2">
             <Badge variant={connected ? "default" : "secondary"}>
-              {connected ? "LIVE API" : "DEV PREVIEW"}
+              {connected ? "LIVE API" : "API UNAVAILABLE"}
             </Badge>
             <span className="text-xs font-semibold text-slate-500">
               {loading
@@ -138,21 +143,9 @@ function AdminOverview() {
             </select>
           </div>
           <div className="mt-6 flex h-48 items-end gap-2 sm:gap-4">
-            {[38, 55, 45, 70, 62, 78, 68, 84, 76, 92, 81, 96].map((height, index) => (
-              <div key={index} className="group flex flex-1 flex-col items-center gap-2">
-                <div
-                  className="relative w-full rounded-t-md bg-primary/15 transition-colors group-hover:bg-primary"
-                  style={{ height: `${height}%` }}
-                >
-                  <span className="absolute -top-6 left-1/2 hidden -translate-x-1/2 text-xs font-bold group-hover:block">
-                    {height}
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400">
-                  {["May 1", "5", "10", "15", "20", "25", "30"][index % 7]}
-                </span>
-              </div>
-            ))}
+            <p className="w-full self-center text-sm text-slate-500">
+              Detailed trends are available in the Analytics module once live events are recorded.
+            </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
             <span>
@@ -182,19 +175,10 @@ function AdminOverview() {
               total={summary.totalVehicles}
               color="bg-emerald-500"
             />
-            <StatusBar
-              label="Reserved"
-              value={2}
-              total={summary.totalVehicles}
-              color="bg-amber-400"
-            />
-            <StatusBar label="Sold" value={1} total={summary.totalVehicles} color="bg-primary" />
-            <StatusBar
-              label="Made to order"
-              value={1}
-              total={summary.totalVehicles}
-              color="bg-violet-500"
-            />
+            <p className="text-sm text-slate-500">
+              Reserved, sold, and made-to-order counts will appear when returned by the live summary
+              API.
+            </p>
           </div>
           <Button variant="outline" className="mt-6 w-full">
             Manage inventory <ChevronRight />
@@ -216,32 +200,37 @@ function AdminOverview() {
           </div>
           <div className="divide-y divide-slate-100">
             {inquiries.length ? (
-              inquiries.map((item) => (
-                <div key={item.name} className="flex items-center gap-3 p-4 sm:gap-4 sm:px-6">
+              inquiries.map((item, index) => (
+                <div
+                  key={item.id ?? `${item.customer_name}-${index}`}
+                  className="flex items-center gap-3 p-4 sm:gap-4 sm:px-6"
+                >
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                    {item.name
+                    {item.customer_name
                       .split(" ")
                       .map((part) => part[0])
                       .join("")}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">{item.name}</p>
+                    <p className="truncate text-sm font-bold">{item.customer_name}</p>
                     <p className="truncate text-xs text-slate-500">
-                      {item.type} · {item.vehicle}
+                      {item.type || "Inquiry"} · {item.request_text || "No request details"}
                     </p>
                   </div>
                   <div className="hidden text-right sm:block">
                     <Badge variant={item.status === "New" ? "default" : "secondary"}>
-                      {item.status}
+                      {item.status || "New"}
                     </Badge>
-                    <p className="mt-1 text-[11px] text-slate-400">{item.time}</p>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      {item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}
+                    </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-slate-300 sm:hidden" />
                 </div>
               ))
             ) : (
               <p className="p-6 text-sm text-slate-500">
-                Live inquiries will appear here after the API is connected.
+                No live inquiries have been returned by the API.
               </p>
             )}
           </div>
@@ -254,9 +243,8 @@ function AdminOverview() {
             <div>
               <h2 className="font-extrabold">API-ready development view</h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                This dashboard currently uses safe preview data. Connect{" "}
-                <code className="font-bold">VITE_API_BASE_URL</code> and the summary loader will
-                request <code className="font-bold">/admin/summary</code>.
+                The dashboard uses live summary and inquiry data from the protected PHP API. Sign in
+                with an authorized admin account to load the workspace.
               </p>
             </div>
           </div>
@@ -283,7 +271,7 @@ function Metric({
 }: {
   label: string;
   value: number;
-  change: string;
+  change?: string;
   icon: typeof CarFront;
   tone: string;
 }) {
@@ -301,10 +289,7 @@ function Metric({
         <div className={`grid h-10 w-10 place-items-center rounded-xl ${toneClass}`}>
           <Icon className="h-5 w-5" />
         </div>
-        <span className="flex items-center gap-1 text-xs font-bold text-emerald-600">
-          <ArrowUpRight className="h-3 w-3" />
-          {change}
-        </span>
+        {change && <span className="text-xs font-bold text-slate-400">Live</span>}
       </div>
       <p className="mt-3 text-xs font-semibold text-slate-500 sm:mt-5">{label}</p>
       <p className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">{value}</p>
