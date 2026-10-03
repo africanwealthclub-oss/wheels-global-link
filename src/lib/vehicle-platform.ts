@@ -74,15 +74,31 @@ function parseImages(value: unknown): string[] {
   return images.filter((entry): entry is string => typeof entry === "string").map(resolveApiAsset);
 }
 
+function humanizeSlug(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\d{10,}\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 function mapApiVehicle(item: ApiVehicle): Vehicle {
   const images = parseImages(item.images_json ?? item.images);
   const image = resolveApiAsset(item.image ?? images[0]);
+  const fallbackName = humanizeSlug(item.slug);
+  const brand = String(item.brand ?? "").trim() || fallbackName.split(" ")[0] || "Vehicle";
+  const model =
+    String(item.model ?? "").trim() ||
+    fallbackName.replace(new RegExp(`^${brand}\\s*`, "i"), "") ||
+    "Vehicle listing";
+  const fallbackYear = fallbackName.match(/\b(?:19|20)\d{2}\b/)?.[0];
 
   return {
     slug: String(item.slug ?? ""),
-    brand: String(item.brand ?? ""),
-    model: String(item.model ?? ""),
-    year: Number(item.year ?? 0),
+    brand,
+    model,
+    year: Number(item.year) || Number(fallbackYear ?? 0),
     condition: String(item.condition_name ?? item.condition ?? ""),
     fuel: String(item.fuel ?? ""),
     transmission: String(item.transmission ?? ""),
@@ -238,7 +254,7 @@ export async function publicVehicles(): Promise<Vehicle[]> {
   );
   const allItems = [firstPage, ...remainingPages].flatMap((page) => page.data);
 
-  return allItems.map(mapApiVehicle).filter((item) => item.slug && item.brand && item.model);
+  return allItems.map(mapApiVehicle).filter((item) => item.slug);
 }
 
 export async function publicVehicleBySlug(slug: string): Promise<Vehicle | null> {
