@@ -106,24 +106,16 @@ function AdminOverview() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Metric
-          label="Total vehicles"
-          value={summary.totalVehicles}
-          change="12%"
-          icon={CarFront}
-          tone="blue"
-        />
+        <Metric label="Total vehicles" value={summary.totalVehicles} icon={CarFront} tone="blue" />
         <Metric
           label="Available vehicles"
           value={summary.availableVehicles}
-          change="8%"
           icon={ShieldCheck}
           tone="green"
         />
         <Metric
           label="New inquiries"
           value={summary.inquiries}
-          change="24%"
           icon={ClipboardList}
           tone="orange"
         />
