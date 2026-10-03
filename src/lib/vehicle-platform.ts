@@ -405,13 +405,18 @@ export async function submitInquiry(payload: Record<string, unknown>) {
   return data as { ok: true; id: number };
 }
 
-export async function adminUploadFiles(files: File[], folder: string, entityId?: number) {
+export async function adminUploadFiles(
+  files: File[],
+  folder: string,
+  entityId?: number,
+  entityType = "vehicle",
+) {
   if (!API_BASE_URL || !isAdminApiEnabled()) throw new Error("API mode is off.");
   const form = new FormData();
   files.forEach((file) => form.append("files[]", file));
   form.append("folder", folder);
   if (entityId) {
-    form.append("entity_type", "vehicle");
+    form.append("entity_type", entityType);
     form.append("entity_id", String(entityId));
   }
   const headers = new Headers({ Accept: "application/json" });

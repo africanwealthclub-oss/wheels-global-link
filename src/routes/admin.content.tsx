@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Edit3, Eye, FileText, Plus, RefreshCw, Trash2, X } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
 import { AdminPagination } from "@/components/admin-pagination";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   adminDelete,
   adminList,
   adminUpdate,
+  adminUploadFiles,
 } from "@/lib/vehicle-platform";
 
 export const Route = createFileRoute("/admin/content")({
@@ -62,6 +63,8 @@ function ContentAdminPage() {
   const [live, setLive] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, per_page: 12 });
   const load = async (requestedPage = page) => {
@@ -83,9 +86,19 @@ function ContentAdminPage() {
   useEffect(() => {
     void load(page);
   }, [page]);
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(form?.cover_image ?? "");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(coverFile);
+    setCoverPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [coverFile, form?.cover_image]);
   const startCreate = () => {
     setEditingId(null);
     setForm({ ...emptyForm });
+    setCoverFile(null);
     setMessage("");
   };
   const startEdit = (article: Article) => {
@@ -98,12 +111,14 @@ function ContentAdminPage() {
       cover_image: article.cover_image ?? "",
       status: article.status || "Draft",
     });
+    setCoverFile(null);
     setMessage("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const closeForm = () => {
     setForm(null);
     setEditingId(null);
+    setCoverFile(null);
   };
   const update = (key: keyof FormState, value: string) =>
     setForm((current) =>
@@ -138,8 +153,14 @@ function ContentAdminPage() {
     setMessage("");
     try {
       const payload = { ...form, slug: form.slug || slugify(form.title), status: form.status };
-      if (editingId) await adminUpdate("articles", editingId, payload);
-      else await adminCreate("articles", payload);
+      const result = editingId
+        ? await adminUpdate("articles", editingId, payload).then(() => ({ id: editingId }))
+        : await adminCreate("articles", payload);
+      if (coverFile && result.id) {
+        const uploaded = await adminUploadFiles([coverFile], "articles", result.id, "article");
+        const coverImage = uploaded.data[0]?.url;
+        if (coverImage) await adminUpdate("articles", result.id, { cover_image: coverImage });
+      }
       closeForm();
       await load();
     } catch (error) {
@@ -295,9 +316,20 @@ function ContentAdminPage() {
                 value={form.cover_image}
                 onChange={(event) => update("cover_image", event.target.value)}
               />
-              {form.cover_image && (
+              <Input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="mt-2"
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setCoverFile(event.target.files?.[0] ?? null)
+                }
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Upload a JPG, PNG, or WebP cover image, or paste an image URL.
+              </span>
+              {coverPreview && (
                 <img
-                  src={form.cover_image}
+                  src={coverPreview}
                   alt="Article cover preview"
                   className="mt-3 aspect-[16/9] w-full rounded-xl border border-slate-200 object-cover"
                   onError={(event) => {
@@ -338,9 +370,17 @@ function ContentAdminPage() {
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <FileText className="h-5 w-5" />
-              </div>
+              {item.cover_image ? (
+                <img
+                  src={item.cover_image}
+                  alt={`${item.title} cover`}
+                  className="h-16 w-24 rounded-xl border border-slate-100 object-cover"
+                />
+              ) : (
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+              )}
               <Badge variant={item.status === "Published" ? "default" : "secondary"}>
                 {item.status}
               </Badge>
