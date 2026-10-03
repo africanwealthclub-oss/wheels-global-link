@@ -19,8 +19,7 @@ import hero from "@/assets/awa-hero.jpg";
 import carsCategory from "@/assets/awa-cars-category.jpg";
 import showroom from "@/assets/awa-showroom.jpg";
 import globalImage from "@/assets/awa-global.jpg";
-import { vehicles } from "@/lib/inventory";
-import { localArticles } from "@/lib/news";
+import type { Vehicle } from "@/lib/inventory";
 import { ContactStrip } from "./site-shell";
 import { SectionHeading, VehicleGrid } from "./marketplace";
 import { NewsGrid, type NewsArticle } from "./news";
@@ -34,29 +33,23 @@ const reveal = {
 };
 
 export function HomePage() {
-  const [catalog, setCatalog] = useState(vehicles);
-  const [articles, setArticles] = useState<NewsArticle[]>(localArticles);
+  const [catalog, setCatalog] = useState<Vehicle[]>([]);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
 
   useEffect(() => {
     let active = true;
     void Promise.allSettled([publicVehicles(), publicNews()]).then(
       ([vehicleResult, newsResult]) => {
         if (!active) return;
-        if (vehicleResult.status === "fulfilled" && vehicleResult.value.length) {
-          setCatalog(vehicleResult.value);
-        }
-        if (
-          newsResult.status === "fulfilled" &&
-          Array.isArray(newsResult.value) &&
-          newsResult.value.length
-        ) {
-          setArticles(
-            newsResult.value.map((article) => ({
-              ...article,
-              cover_image: article.cover_image ?? undefined,
-            })),
-          );
-        }
+        setCatalog(vehicleResult.status === "fulfilled" ? vehicleResult.value : []);
+        setArticles(
+          newsResult.status === "fulfilled" && Array.isArray(newsResult.value)
+            ? newsResult.value.map((article) => ({
+                ...article,
+                cover_image: article.cover_image ?? undefined,
+              }))
+            : [],
+        );
       },
     );
     return () => {
@@ -76,7 +69,14 @@ export function HomePage() {
             title="Featured Vehicles"
             copy="Explore vehicles by brand, model, or type. Inventory shown is representative and subject to confirmation."
           />
-          <VehicleGrid items={catalog.slice(0, 3)} />
+          {catalog.length ? (
+            <VehicleGrid items={catalog.slice(0, 3)} />
+          ) : (
+            <p className="border border-dashed border-border bg-background p-6 text-muted-foreground">
+              No published vehicles are available yet. Send us your requirements and we will source
+              one for you.
+            </p>
+          )}
           <div className="mt-10 text-center">
             <Button asChild size="lg">
               <Link to="/cars">
@@ -179,7 +179,7 @@ function Hero() {
   );
 }
 
-function SearchSection({ items }: { items: typeof vehicles }) {
+function SearchSection({ items }: { items: Vehicle[] }) {
   const [query, setQuery] = useState("");
   const shown = items.filter((vehicle) =>
     `${vehicle.brand} ${vehicle.model} ${vehicle.category ?? ""}`
@@ -331,7 +331,7 @@ function BrowseByCategory() {
   );
 }
 
-function MarketplacePreview({ items }: { items: typeof vehicles }) {
+function MarketplacePreview({ items }: { items: Vehicle[] }) {
   const models = [...new Set(items.map((vehicle) => vehicle.model))].slice(0, 4);
 
   return (
@@ -416,7 +416,13 @@ function NewsSection({ articles }: { articles: NewsArticle[] }) {
           </Button>
         </div>
         <div className="mt-10">
-          <NewsGrid articles={articles.slice(0, 3)} />
+          {articles.length ? (
+            <NewsGrid articles={articles.slice(0, 3)} />
+          ) : (
+            <p className="border border-dashed border-border bg-background p-6 text-muted-foreground">
+              No published News articles are available yet.
+            </p>
+          )}
         </div>
       </div>
     </motion.section>
