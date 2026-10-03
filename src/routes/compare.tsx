@@ -231,9 +231,6 @@ function EmptyCompare() {
               Browse vehicles <ArrowRight />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/favorites">Open saved vehicles</Link>
-          </Button>
         </div>
       </div>
       <section className="mt-12">

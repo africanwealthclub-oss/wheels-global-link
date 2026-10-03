@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Edit3, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
+import { AdminPagination } from "@/components/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,11 +71,18 @@ function VehicleAdminPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const load = async () => {
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, per_page: 12 });
+  const load = async (requestedPage = page) => {
     setLoading(true);
     try {
-      const result = await adminList<Vehicle>("vehicles", "?per_page=100");
+      const params = new URLSearchParams({ per_page: "12", page: String(requestedPage) });
+      if (query.trim()) params.set("search", query.trim());
+      const result = await adminList<Vehicle>("vehicles", `?${params.toString()}`);
       setItems(Array.isArray(result.data) ? result.data : []);
+      setPagination(
+        result.meta ?? { page: requestedPage, pages: 1, total: result.data.length, per_page: 12 },
+      );
       setConnected(true);
     } catch (error) {
       setConnected(false);
@@ -88,8 +96,8 @@ function VehicleAdminPage() {
     }
   };
   useEffect(() => {
-    void load();
-  }, []);
+    void load(page);
+  }, [page, query]);
   const filtered = useMemo(
     () =>
       items.filter((vehicle) =>
@@ -156,7 +164,7 @@ function VehicleAdminPage() {
       closeForm();
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save vehicle");
+      setMessage(error instanceof Error ? error.message : "Unable to update vehicle");
     } finally {
       setSaving(false);
     }
@@ -321,7 +329,10 @@ function VehicleAdminPage() {
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setPage(1);
+              setQuery(event.target.value);
+            }}
             placeholder="Search brand, model, or slug"
             className="pl-9"
           />
@@ -388,6 +399,13 @@ function VehicleAdminPage() {
             {loading ? "Loading vehicles…" : "No vehicles found."}
           </div>
         )}
+        <AdminPagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          perPage={pagination.per_page}
+          onPageChange={setPage}
+        />
       </div>
     </AdminModuleShell>
   );

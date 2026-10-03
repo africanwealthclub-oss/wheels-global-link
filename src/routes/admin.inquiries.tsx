@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Mail, Phone, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
+import { AdminPagination } from "@/components/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,21 +32,28 @@ function InquiryAdminPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(Boolean(API_BASE_URL));
   const [selected, setSelected] = useState<Inquiry | null>(null);
-  const load = () => {
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, per_page: 12 });
+  const load = (requestedPage = page) => {
     if (!API_BASE_URL) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    adminList<Inquiry>("inquiries")
+    adminList<Inquiry>("inquiries", `?per_page=12&page=${requestedPage}`)
       .then((r) => {
         setItems(r.data);
+        setPagination(
+          r.meta ?? { page: requestedPage, pages: 1, total: r.data.length, per_page: 12 },
+        );
         setLive(true);
       })
       .catch(() => setLive(false))
       .finally(() => setLoading(false));
   };
-  useEffect(load, []);
+  useEffect(() => {
+    load(page);
+  }, [page]);
   const filtered = useMemo(
     () =>
       items.filter((x) =>
@@ -84,7 +92,10 @@ function InquiryAdminPage() {
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setQuery(e.target.value);
+            }}
             placeholder="Search customer or request"
             className="pl-9"
           />
@@ -161,6 +172,15 @@ function InquiryAdminPage() {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <AdminPagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          perPage={pagination.per_page}
+          onPageChange={setPage}
+        />
       </div>
       {!live && !loading && (
         <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">

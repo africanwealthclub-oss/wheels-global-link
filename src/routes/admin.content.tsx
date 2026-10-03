@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Edit3, Eye, FileText, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
+import { AdminPagination } from "@/components/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,11 +62,16 @@ function ContentAdminPage() {
   const [live, setLive] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const load = async () => {
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, per_page: 12 });
+  const load = async (requestedPage = page) => {
     setLoading(true);
     try {
-      const result = await adminList<Article>("articles");
+      const result = await adminList<Article>("articles", `?per_page=12&page=${requestedPage}`);
       setItems(result.data);
+      setPagination(
+        result.meta ?? { page: requestedPage, pages: 1, total: result.data.length, per_page: 12 },
+      );
       setLive(true);
     } catch (error) {
       setLive(false);
@@ -75,8 +81,8 @@ function ContentAdminPage() {
     }
   };
   useEffect(() => {
-    void load();
-  }, []);
+    void load(page);
+  }, [page]);
   const startCreate = () => {
     setEditingId(null);
     setForm({ ...emptyForm });
@@ -289,6 +295,16 @@ function ContentAdminPage() {
                 value={form.cover_image}
                 onChange={(event) => update("cover_image", event.target.value)}
               />
+              {form.cover_image && (
+                <img
+                  src={form.cover_image}
+                  alt="Article cover preview"
+                  className="mt-3 aspect-[16/9] w-full rounded-xl border border-slate-200 object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -359,6 +375,15 @@ function ContentAdminPage() {
             {loading ? "Loading articles…" : "No articles found."}
           </div>
         )}
+      </div>
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <AdminPagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          perPage={pagination.per_page}
+          onPageChange={setPage}
+        />
       </div>
     </AdminModuleShell>
   );
