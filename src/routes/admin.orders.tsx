@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminModuleShell } from "@/components/admin-shell";
+import { AdminPagination } from "@/components/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,11 +64,16 @@ function OrderAdminPage() {
   const [live, setLive] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const load = async () => {
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, per_page: 12 });
+  const load = async (requestedPage = page) => {
     setLoading(true);
     try {
-      const result = await adminList<Order>("orders");
+      const result = await adminList<Order>("orders", `?per_page=12&page=${requestedPage}`);
       setOrders(result.data);
+      setPagination(
+        result.meta ?? { page: requestedPage, pages: 1, total: result.data.length, per_page: 12 },
+      );
       setLive(true);
     } catch (error) {
       setLive(false);
@@ -77,8 +83,8 @@ function OrderAdminPage() {
     }
   };
   useEffect(() => {
-    void load();
-  }, []);
+    void load(page);
+  }, [page]);
   const filtered = useMemo(
     () =>
       orders.filter((order) =>
@@ -250,7 +256,10 @@ function OrderAdminPage() {
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setPage(1);
+              setQuery(event.target.value);
+            }}
             placeholder="Search order, customer, vehicle, or destination"
             className="pl-9"
           />
@@ -315,6 +324,13 @@ function OrderAdminPage() {
             {loading ? "Loading orders…" : "No orders found."}
           </div>
         )}
+        <AdminPagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          perPage={pagination.per_page}
+          onPageChange={setPage}
+        />
       </div>
     </AdminModuleShell>
   );
